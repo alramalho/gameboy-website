@@ -189,7 +189,7 @@ function createGameboy() {
   })
 
   // Browsers only allow sound after a tap or key press on the page, so start it with the first.
-  for (const type of ['pointerdown', 'touchend', 'keydown']) {
+  for (const type of ['pointerdown', 'touchend', 'click', 'keydown']) {
     document.addEventListener(type, unlockSound, { passive: true })
   }
 }

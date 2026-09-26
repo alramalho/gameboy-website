@@ -9,16 +9,51 @@ export type Sound = 'bump' | 'door' | 'blip' | 'item';
 let context: AudioContext | undefined;
 let master: GainNode | undefined;
 
-/** Browsers only allow sound after the first press or tap, so start it then. */
+let silence: HTMLAudioElement | undefined;
+
+/**
+ * Browsers only allow sound after the first press or tap, so start it then. On an iPhone in
+ * silent mode Web Audio is muted as well, unless the page counts as playing media: ask for that
+ * directly where Safari can (audioSession, 17.4+), and elsewhere play a moment of silence as an
+ * ordinary audio file, which puts the page in the same mode. A silent sample through Web Audio
+ * wakes it fully on older WebKit.
+ */
 export function unlockSound() {
+  const session = (navigator as any).audioSession;
+  if (session && session.type !== 'playback') session.type = 'playback';
+  if (!silence) {
+    silence = new Audio(silentWav());
+    silence.setAttribute('playsinline', '');
+    silence.play().catch(() => { silence = undefined; }); // try again on the next tap
+  }
   if (!context) {
     const Context = window.AudioContext || (window as any).webkitAudioContext;
     context = new Context();
     master = context.createGain();
     master.gain.value = 0.35;
     master.connect(context.destination);
+    const blank = context.createBufferSource();
+    blank.buffer = context.createBuffer(1, 1, 22050);
+    blank.connect(context.destination);
+    blank.start(0);
   }
   if (context.state === 'suspended') void context.resume();
+}
+
+/** A tenth of a second of silence, as a WAV file in a data URL. */
+function silentWav() {
+  const rate = 8000, samples = 800;
+  const bytes = new Uint8Array(44 + samples);
+  const view = new DataView(bytes.buffer);
+  const text = (at: number, s: string) => [...s].forEach((c, i) => view.setUint8(at + i, c.charCodeAt(0)));
+  text(0, 'RIFF'); view.setUint32(4, 36 + samples, true); text(8, 'WAVE');
+  text(12, 'fmt '); view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true);
+  view.setUint32(24, rate, true); view.setUint32(28, rate, true); view.setUint16(32, 1, true); view.setUint16(34, 8, true);
+  text(36, 'data'); view.setUint32(40, samples, true);
+  bytes.fill(128, 44); // 8-bit silence sits at the middle value
+  let binary = '';
+  bytes.forEach((b) => { binary += String.fromCharCode(b); });
+  return 'data:audio/wav;base64,' + btoa(binary);
 }
 
 export function playSound(sound: Sound) {
