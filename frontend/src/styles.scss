@@ -9,13 +9,25 @@
   --buttonLight: #e4e5e8;
   --buttonDark: #b3b6bc;
   --buttonEdge: rgba(70, 74, 84, 0.45);
-  // The console's width: the whole phone's width, or less when the screen is too short for it.
-  --gbw: min(100vw, calc((var(--vh, 1vh) * 100 - 2rem) * 0.513));
+  // The height that is always visible: between the browser's bars, even when they're showing.
+  --screenH: calc(var(--vh, 1vh) * 100);
+  // The console's width: the page's width, or less when the screen is too short for it.
+  --gbw: min(100vw, calc((var(--screenH) - 2rem) * 0.513));
+}
+
+@supports (height: 100svh) {
+  :root {
+    --screenH: 100svh;
+  }
 }
 
 html {
   background: #d8cbb6;
   touch-action: none;
+  // Nothing on the console is text to select: a long press is a held button, not a selection.
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
 body {
@@ -24,8 +36,7 @@ body {
   color: white;
   text-align: center;
   box-sizing: border-box;
-  height: 100%;
-  height: calc(var(--vh, 1vh) * 100);
+  height: var(--screenH);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -77,6 +88,16 @@ a {
     inset 0 0.4cqw 0.6cqw rgba(0, 0, 0, 0.2);
 }
 
+// Centre something of the given size on (x, y) on the base: x and sizes in cqw, y in cqw of a
+// base 94cqw tall (the photo's), scaled to the base's actual height.
+@mixin on-base($x, $y, $w, $h: $w) {
+  position: absolute;
+  left: calc(#{$x} * 1cqw - #{$w} * 0.5cqw);
+  top: calc(#{$y} / 94 * 100% - #{$h} * 0.5cqw);
+  width: calc(#{$w} * 1cqw);
+  height: calc(#{$h} * 1cqw);
+}
+
 // Centre something of the given size on (x, y), all in cqw.
 @mixin at($x, $y, $w, $h: $w) {
   position: absolute;
@@ -89,6 +110,9 @@ a {
 // ── The console ──────────────────────────────────────────────────────────────
 
 .gameboy {
+  --lidH: 90cqw;
+  --bezelTop: 11cqw;
+  --hingeH: 11cqw;
   container-type: size;
   position: relative;
   display: flex;
@@ -101,13 +125,33 @@ a {
   filter: drop-shadow(0 calc(var(--gbw) * 0.02) calc(var(--gbw) * 0.03) rgba(60, 40, 10, 0.35));
 }
 
+@media (max-aspect-ratio: 5/8) and (max-width: 600px) {
+  .gameboy {
+    --gbw: 100vw;
+    --lidH: 80cqw;
+    --bezelTop: 7.5cqw;
+    --hingeH: 8cqw;
+    width: 100vw;
+    height: var(--screenH);
+    filter: none;
+  }
+
+  .bumper {
+    width: 5cqw;
+    height: 5cqw;
+
+    &.top-left, &.top-middle, &.top-right { top: 1.2cqw; }
+    &.bottom-left, &.bottom-right { bottom: 1.2cqw; }
+  }
+}
+
 // ── The lid ──────────────────────────────────────────────────────────────────
 
 .lid {
   @include shell;
   position: relative;
   flex-shrink: 0;
-  height: 90cqw;
+  height: var(--lidH);
   border-radius: 3cqw 3cqw 1.5cqw 1.5cqw;
 }
 
@@ -135,7 +179,7 @@ a {
   position: absolute;
   left: 5cqw;
   right: 5cqw;
-  top: 11cqw;
+  top: var(--bezelTop);
   box-sizing: border-box;
   padding: 4cqw 5cqw 1.5cqw;
   border-radius: 1.2cqw;
@@ -181,7 +225,7 @@ a {
   position: relative;
   z-index: 1;
   flex-shrink: 0;
-  height: 11cqw;
+  height: var(--hingeH);
   margin: -1cqw 0;
   display: flex;
 
@@ -210,7 +254,7 @@ a {
 
 // The front-light button, just under the hinge.
 .light {
-  @include at(48.5, 13, 6.2);
+  @include on-base(48.5, 13, 6.2);
   @include button;
   border-radius: 50%;
   box-shadow: 0 0 0 0.9cqw rgba(0, 0, 0, 0.07), 0 0 0 0.3cqw var(--buttonEdge), 0 0.4cqw 0.5cqw rgba(0, 0, 0, 0.25);
@@ -258,7 +302,7 @@ a {
 
 // The D-pad in a big round dip with a raised rim.
 .dpad-well {
-  @include at(26.5, 37, 33);
+  @include on-base(26.5, 38, 41);   // bigger than the real one: easier to press on a phone
   @include recess;
   border-radius: 50%;
   box-shadow:
@@ -269,7 +313,7 @@ a {
 }
 
 .dpad {
-  @include at(16.5, 16.5, 25);
+  @include at(20.5, 20.5, 31);
   filter: drop-shadow(0 0 0.3cqw var(--buttonEdge)) drop-shadow(0 0.5cqw 0.5cqw rgba(0, 0, 0, 0.3));
 
   > * {
@@ -304,9 +348,9 @@ a {
 
 // A and B in a slanted, pill-shaped dip; B lower left. Their letters are moulded into them.
 .a-b {
-  @include at(75, 33, 36, 17.5);
+  @include on-base(74, 34, 42, 21);
   @include recess;
-  border-radius: 8.75cqw;
+  border-radius: 10.5cqw;
   transform: rotate(-21deg);
   box-shadow:
     inset 0.5cqw 0.8cqw 0.9cqw rgba(0, 0, 0, 0.28),
@@ -318,9 +362,9 @@ a {
   .b {
     @include button;
     position: absolute;
-    top: 3.5cqw;
-    width: 10.5cqw;
-    height: 10.5cqw;
+    top: 4cqw;
+    width: 13cqw;
+    height: 13cqw;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -328,7 +372,7 @@ a {
     transition: transform 0.05s;
 
     span {
-      font-size: 5cqw;
+      font-size: 6cqw;
       font-weight: 400;
       color: rgba(120, 124, 134, 0.55);
       text-shadow: 0.15cqw 0.2cqw 0 rgba(255, 255, 255, 0.8);
@@ -342,13 +386,13 @@ a {
     }
   }
 
-  .b { left: 4.75cqw; }
-  .a { right: 4.75cqw; }
+  .b { left: 5cqw; }
+  .a { right: 5cqw; }
 }
 
 // The speaker: a few holes on a staggered grid, about four across, in a rough diamond.
 .speaker {
-  @include at(52, 57, 18.4, 17);
+  @include on-base(53, 60, 16.1, 15);
   background:
     radial-gradient(circle, rgba(30, 32, 40, 0.65) 0.45cqw, transparent 0.6cqw) 0 0 / 4.6cqw 3.8cqw,
     radial-gradient(circle, rgba(30, 32, 40, 0.65) 0.45cqw, transparent 0.6cqw) 2.3cqw 1.9cqw / 4.6cqw 3.8cqw;
@@ -375,9 +419,9 @@ a {
       position: absolute;
       left: 50%;
       top: 50%;
-      width: 6.7cqw;
-      height: 6.7cqw;
-      margin: -3.35cqw 0 0 -3.35cqw;
+      width: 7.6cqw;
+      height: 7.6cqw;
+      margin: -3.8cqw 0 0 -3.8cqw;
       border-radius: 50%;
       transition: transform 0.05s;
     }
@@ -400,13 +444,13 @@ a {
   }
 
   .select {
-    @include at(44, 80, 11.5);
+    @include on-base(43, 82, 13);
 
     &::after { content: 'SELECT'; }
   }
 
   .start {
-    @include at(61.5, 79.5, 11.5);
+    @include on-base(61.5, 81.5, 13);
 
     &::after { content: 'START'; }
   }
@@ -457,12 +501,13 @@ a {
   }
 }
 
-// ── Links, printed small in the bottom left of the base ──────────────────────
+// ── Links, printed small on the lid under the screen, between its lower bumpers ────
 
 .social {
   position: absolute;
-  left: 6cqw;
-  bottom: 5cqw;
+  left: 50%;
+  bottom: 1.6cqw;
+  transform: translateX(-50%);
   display: flex;
   align-items: center;
   gap: 2.6cqw;
