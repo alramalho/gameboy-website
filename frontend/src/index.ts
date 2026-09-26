@@ -1,4 +1,5 @@
 import { Queue } from "./queue";
+import { playSound as playEffect, unlockSound, Sound } from "./sound";
 
 /**
  * The Game Boy is a frame around the game (alramalho/pokemon-website), which runs
@@ -176,9 +177,16 @@ function createGameboy() {
   // The game says whenever one of its buttons goes down or up, whether a key or a Game Boy
   // button did it, so the Game Boy shows it pressed: the arrows light up the D-pad, Z the A...
   window.addEventListener('message', (event) => {
-    if (event.source !== game.contentWindow || event.data?.kind !== 'held') return
-    showPressed(event.data.button, !!event.data.down)
+    if (event.source !== game.contentWindow) return
+    if (event.data?.kind === 'held') showPressed(event.data.button, !!event.data.down)
+    // The game's sound effects play here, where the taps are (see sound.ts).
+    if (event.data?.kind === 'sound') playEffect(event.data.sound as Sound)
   })
+
+  // Browsers only allow sound after a tap or key press on the page, so start it with the first.
+  for (const type of ['pointerdown', 'touchend', 'keydown']) {
+    document.addEventListener(type, unlockSound, { passive: true })
+  }
 }
 
 const BUTTON_ELEMENTS: Record<string, string> = {
