@@ -112,6 +112,9 @@ a {
 .gameboy {
   --lidH: 90cqw;
   --bezelTop: 11cqw;
+  --bezelSide: 5cqw;   // grey beside the bezel
+  --bezelPad: 5cqw;    // black beside the screen
+  --bezelPadTop: 4cqw; // black above it
   --hingeH: 11cqw;
   container-type: size;
   position: relative;
@@ -128,8 +131,13 @@ a {
 @media (max-aspect-ratio: 5/8) and (max-width: 600px) {
   .gameboy {
     --gbw: 100vw;
-    --lidH: 80cqw;
-    --bezelTop: 7.5cqw;
+    // A bigger screen than the real one's (91% of the width, not 80%): thinner grey and black
+    // round it, a slightly taller lid, and a little less base.
+    --lidH: 83cqw;
+    --bezelTop: 5.5cqw;
+    --bezelSide: 2cqw;
+    --bezelPad: 2.5cqw;
+    --bezelPadTop: 2.5cqw;
     --hingeH: 8cqw;
     width: 100vw;
     height: var(--screenH);
@@ -137,11 +145,13 @@ a {
   }
 
   .bumper {
-    width: 5cqw;
-    height: 5cqw;
+    width: 4.2cqw;
+    height: 4.2cqw;
 
-    &.top-left, &.top-middle, &.top-right { top: 1.2cqw; }
-    &.bottom-left, &.bottom-right { bottom: 1.2cqw; }
+    &.top-left, &.top-middle, &.top-right { top: 0.8cqw; }
+    &.bottom-left, &.bottom-right { bottom: 1cqw; }
+    &.top-left, &.bottom-left { left: 2.5cqw; }
+    &.top-right, &.bottom-right { right: 2.5cqw; }
   }
 }
 
@@ -177,11 +187,11 @@ a {
 // The black bezel: a thin border round the screen, wider underneath for the logo.
 .bezel {
   position: absolute;
-  left: 5cqw;
-  right: 5cqw;
+  left: var(--bezelSide);
+  right: var(--bezelSide);
   top: var(--bezelTop);
   box-sizing: border-box;
-  padding: 4cqw 5cqw 1.5cqw;
+  padding: var(--bezelPadTop) var(--bezelPad) 1.5cqw;
   border-radius: 1.2cqw;
   background: var(--bezelColor);
   box-shadow: 0 0 0 0.35cqw rgba(0, 0, 0, 0.25), inset 0 0.3cqw 0.6cqw rgba(255, 255, 255, 0.06);
@@ -300,8 +310,12 @@ a {
   pointer-events: auto;
 }
 
-// The D-pad in a big round dip with a raised rim.
+// The D-pad in a big round dip with a raised rim. The whole dip is the touch surface: the
+// finger's position picks the direction, so it can roll from one to the next (index.ts).
 .dpad-well {
+  touch-action: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
   @include on-base(26.5, 38, 41);   // bigger than the real one: easier to press on a phone
   @include recess;
   border-radius: 50%;
@@ -340,10 +354,10 @@ a {
   }
 
   // Pressed: that arm tips down, so it darkens towards its end.
-  .up.pressed, .up:active { background: linear-gradient(to top, var(--buttonLight), #a9acb3); }
-  .down.pressed, .down:active { background: linear-gradient(to bottom, var(--buttonLight), #a9acb3); }
-  .left.pressed, .left:active { background: linear-gradient(to left, var(--buttonLight), #a9acb3); }
-  .right.pressed, .right:active { background: linear-gradient(to right, var(--buttonLight), #a9acb3); }
+  .up.pressed { background: linear-gradient(to top, var(--buttonLight), #a9acb3); }
+  .down.pressed { background: linear-gradient(to bottom, var(--buttonLight), #a9acb3); }
+  .left.pressed { background: linear-gradient(to left, var(--buttonLight), #a9acb3); }
+  .right.pressed { background: linear-gradient(to right, var(--buttonLight), #a9acb3); }
 }
 
 // A and B in a slanted, pill-shaped dip; B lower left. Their letters are moulded into them.

@@ -136,14 +136,19 @@ function createGameboy() {
     return button
   }
 
+  // The D-pad is one surface, like the real one's single rocking piece: the direction held is
+  // wherever the finger is, from the pad's centre, so it can roll from up to left to down
+  // without lifting. (Four separate buttons would each keep the finger that pressed them.)
   const DPADWrapper = document.querySelector('.dpad')
-  DPADWrapper.appendChild(createButton("up", '<i class="fa fa-caret-up">', 'up'))
-  DPADWrapper.appendChild(createButton("left", '<i class="fa fa-caret-left">', 'left'))
-  DPADWrapper.appendChild(createButton("right", '<i class="fa fa-caret-right">', 'right'))
-  DPADWrapper.appendChild(createButton("down", '<i class="fa fa-caret-down">', 'down'))
+  for (const direction of ['up', 'left', 'right', 'down']) {
+    const arm = document.createElement('div')
+    arm.className = direction
+    DPADWrapper.appendChild(arm)
+  }
   const middle = document.createElement('div')
   middle.className = 'middle'
   DPADWrapper.appendChild(middle)
+  createDpad(document.querySelector('.dpad-well') as HTMLElement)
 
   const ABWrapper = document.querySelector('.a-b')
   ABWrapper.appendChild(createButton("b", '<span>B</span>', 'b'))
@@ -187,6 +192,66 @@ function createGameboy() {
   for (const type of ['pointerdown', 'touchend', 'keydown']) {
     document.addEventListener(type, unlockSound, { passive: true })
   }
+}
+
+/**
+ * Touch or click anywhere in the D-pad's dip: the finger's position from the centre picks the
+ * direction, and moving the finger into another quarter switches to it. Near the diagonals the
+ * direction already held wins unless the finger is clearly on the other side, so it doesn't
+ * flicker when the thumb rests between two arms. A tiny dead zone in the middle holds nothing.
+ */
+function createDpad(pad: HTMLElement) {
+  let finger: number | undefined
+  let held: GameButton | undefined
+
+  const hold = (direction: GameButton | undefined) => {
+    if (direction === held) return
+    if (held) {
+      showPressed(held, false)
+      sendToGame({ kind: 'button', button: held, down: false })
+    }
+    held = direction
+    if (held) {
+      showPressed(held, true)
+      sendToGame({ kind: 'button', button: held, down: true })
+      fireControl(held)
+    }
+  }
+
+  const directionAt = (event: PointerEvent): GameButton | undefined => {
+    const box = pad.getBoundingClientRect()
+    const dx = event.clientX - (box.left + box.width / 2)
+    const dy = event.clientY - (box.top + box.height / 2)
+    if (Math.hypot(dx, dy) < box.width * 0.06) return undefined
+    const horizontal: GameButton = dx < 0 ? 'left' : 'right'
+    const vertical: GameButton = dy < 0 ? 'up' : 'down'
+    const stickiness = 1.25
+    if (held === horizontal && Math.abs(dy) < Math.abs(dx) * stickiness) return horizontal
+    if (held === vertical && Math.abs(dx) < Math.abs(dy) * stickiness) return vertical
+    return Math.abs(dx) > Math.abs(dy) ? horizontal : vertical
+  }
+
+  pad.addEventListener('pointerdown', (event) => {
+    if (finger !== undefined) return
+    event.preventDefault()
+    finger = event.pointerId
+    try {
+      pad.setPointerCapture(event.pointerId) // keep following the finger even off the pad
+    } catch { }
+    hold(directionAt(event))
+  })
+  pad.addEventListener('pointermove', (event) => {
+    if (event.pointerId === finger) hold(directionAt(event))
+  })
+  const lift = (event: PointerEvent) => {
+    if (event.pointerId !== finger) return
+    finger = undefined
+    hold(undefined)
+  }
+  pad.addEventListener('pointerup', lift)
+  pad.addEventListener('pointercancel', lift)
+  pad.addEventListener('lostpointercapture', lift)
+  pad.addEventListener('contextmenu', (event) => event.preventDefault())
 }
 
 const BUTTON_ELEMENTS: Record<string, string> = {
