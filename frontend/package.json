@@ -8,12 +8,7 @@
     "prebuild": "rm -rf dist && mkdir -p dist/assets && cp -R src/assets dist",
     "build": "parcel build index.html src/assets/**/*"
   },
-  "dependencies": {
-    "detect-gpu": "0.0.40",
-    "three": "^0.134.0",
-    "three-orbitcontrols": "2.102.1",
-    "threex": "^1.0.0"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@babel/core": "7.2.0",
     "jest": "^27.3.1",

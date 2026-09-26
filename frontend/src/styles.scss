@@ -1,12 +1,20 @@
+// A Game Boy Advance SP, opened flat, measured off a photo of a real one. Every size inside it
+// is in cqw (a hundredth of the console's width), so it scales as one piece. Positions on the
+// base are the centres of the parts, as fractions of the width, taken from the photo.
+
 :root {
-  --gameboyColor: #f2ae00;
-  --gameboyMaxWidth: 768px;
-  --displayMargin: 1rem;
-  --infoBannerTransitionTimeInSeconds: 1s;
+  --gameboyColor: #bbbcc1; // the shell: platinum. SELECT and the Konami code flash other SP colours
+  --bezelColor: #1b1c20;
+  --printColor: rgba(45, 48, 58, 0.62); // lettering printed on the shell
+  --buttonLight: #e4e5e8;
+  --buttonDark: #b3b6bc;
+  --buttonEdge: rgba(70, 74, 84, 0.45);
+  // The console's width: the whole phone's width, or less when the screen is too short for it.
+  --gbw: min(100vw, calc((var(--vh, 1vh) * 100 - 2rem) * 0.513));
 }
 
 html {
-  background: bisque;
+  background: #d8cbb6;
   touch-action: none;
 }
 
@@ -16,534 +24,469 @@ body {
   color: white;
   text-align: center;
   box-sizing: border-box;
-  background: transparent;
+  height: 100%;
+  height: calc(var(--vh, 1vh) * 100);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 iframe {
   pointer-events: auto;
 }
 
-.sepia {
-  -webkit-filter: sepia(40%);
-  -moz-filter: sepia(40%);
-  -ms-filter: sepia(40%);
-  filter: sepia(40%)
-}
-
-h1 {
-  position: absolute;
-  width: 100%;
-  font-size: 1.5rem;
-}
-
 a {
   color: white;
 }
 
-a:hover {
-  color: purple;
+// Satin metal-look plastic, lit from the top left.
+@mixin shell {
+  background:
+    linear-gradient(170deg, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0) 45%, rgba(0, 0, 0, 0.1) 100%),
+    var(--gameboyColor);
+  transition: background-color 0.1s;
+  box-shadow:
+    inset 0 0.5cqw 0.5cqw rgba(255, 255, 255, 0.55),
+    inset 0 -0.7cqw 1cqw rgba(0, 0, 0, 0.18),
+    inset 0.4cqw 0 0.5cqw rgba(255, 255, 255, 0.3),
+    inset -0.4cqw 0 0.6cqw rgba(0, 0, 0, 0.12);
 }
 
-canvas {
-  display: block;
-  max-width: 100%;
-  max-height: 100%;
-  box-sizing: border-box;
-  position: absolute !important;
-  top: 0;
-  left: 0;
+// A dip moulded into the shell: shaded where the top-left wall hides the light.
+@mixin recess {
+  background: linear-gradient(160deg, rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.12));
+  box-shadow:
+    inset 0.5cqw 0.8cqw 0.9cqw rgba(0, 0, 0, 0.28),
+    inset -0.3cqw -0.5cqw 0.5cqw rgba(255, 255, 255, 0.55),
+    0 0 0 0.25cqw rgba(255, 255, 255, 0.35);
 }
 
-#scene-container {
+// A light grey rubber-and-plastic button.
+@mixin button {
+  background: radial-gradient(circle at 40% 35%, #f0f1f3, var(--buttonLight) 40%, var(--buttonDark));
+  box-shadow:
+    0 0 0 0.3cqw var(--buttonEdge),
+    0 0.5cqw 0.6cqw rgba(0, 0, 0, 0.3);
+}
+
+@mixin pressed {
+  background: radial-gradient(circle at 60% 65%, #f0f1f3, var(--buttonLight) 40%, var(--buttonDark));
+  box-shadow:
+    0 0 0 0.3cqw var(--buttonEdge),
+    0 0.1cqw 0.2cqw rgba(0, 0, 0, 0.3),
+    inset 0 0.4cqw 0.6cqw rgba(0, 0, 0, 0.2);
+}
+
+// Centre something of the given size on (x, y), all in cqw.
+@mixin at($x, $y, $w, $h: $w) {
   position: absolute;
+  left: calc(#{$x} * 1cqw - #{$w} * 0.5cqw);
+  top: calc(#{$y} * 1cqw - #{$h} * 0.5cqw);
+  width: calc(#{$w} * 1cqw);
+  height: calc(#{$h} * 1cqw);
+}
+
+// ── The console ──────────────────────────────────────────────────────────────
+
+.gameboy {
+  container-type: size;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: var(--gbw);
+  height: calc(var(--gbw) / 0.513);
+  pointer-events: none;
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  font-weight: 700;
+  filter: drop-shadow(0 calc(var(--gbw) * 0.02) calc(var(--gbw) * 0.03) rgba(60, 40, 10, 0.35));
+}
+
+// ── The lid ──────────────────────────────────────────────────────────────────
+
+.lid {
+  @include shell;
+  position: relative;
+  flex-shrink: 0;
+  height: 90cqw;
+  border-radius: 3cqw 3cqw 1.5cqw 1.5cqw;
+}
+
+// Five round rubber bumpers that the lid closes onto.
+.bumper {
+  width: 6cqw;
+  height: 6cqw;
+  border-radius: 50%;
+  position: absolute;
+  background: radial-gradient(circle at 45% 40%, #d2d4d8, #b1b4ba);
+  box-shadow:
+    inset 0.3cqw 0.4cqw 0.5cqw rgba(255, 255, 255, 0.7),
+    inset -0.3cqw -0.4cqw 0.5cqw rgba(0, 0, 0, 0.22),
+    0 0 0 0.25cqw rgba(0, 0, 0, 0.08);
+
+  &.top-left { left: 5.5cqw; top: 3cqw; }
+  &.top-middle { left: 47cqw; top: 2.5cqw; }
+  &.top-right { right: 5.5cqw; top: 3cqw; }
+  &.bottom-left { left: 3.5cqw; bottom: 2.5cqw; }
+  &.bottom-right { right: 3.5cqw; bottom: 2.5cqw; }
+}
+
+// The black bezel: a thin border round the screen, wider underneath for the logo.
+.bezel {
+  position: absolute;
+  left: 5cqw;
+  right: 5cqw;
+  top: 11cqw;
+  box-sizing: border-box;
+  padding: 4cqw 5cqw 1.5cqw;
+  border-radius: 1.2cqw;
+  background: var(--bezelColor);
+  box-shadow: 0 0 0 0.35cqw rgba(0, 0, 0, 0.25), inset 0 0.3cqw 0.6cqw rgba(255, 255, 255, 0.06);
+}
+
+// The screen: exactly the game's shape (240 × 160), so the game fills it edge to edge.
+.display {
+  position: relative;
   width: 100%;
-  height: 100%;
+  aspect-ratio: 3 / 2;
+  background: #101018;
+  overflow: hidden;
+  pointer-events: none;
+
+  .game {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    display: block;
+    background: #101018;
+  }
 }
 
-h1 {
-  font-size: 6.2rem;
+.header {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.5cqw;
+
+  svg {
+    display: block;
+    height: 4.6cqw;
+    width: auto;
+  }
 }
 
-.popup {
+// ── The hinge: a barrel the full width, in four pieces ───────────────────────
+
+.hinge {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  height: 11cqw;
+  margin: -1cqw 0;
+  display: flex;
+
+  span {
+    height: 100%;
+    background:
+      linear-gradient(to bottom, rgba(0, 0, 0, 0.28) 0%, rgba(255, 255, 255, 0.6) 28%, rgba(255, 255, 255, 0.15) 50%, rgba(0, 0, 0, 0.12) 75%, rgba(0, 0, 0, 0.35) 100%),
+      var(--gameboyColor);
+    box-shadow: inset -0.25cqw 0 0 rgba(0, 0, 0, 0.25), inset 0.25cqw 0 0 rgba(255, 255, 255, 0.35);
+  }
+
+  span:nth-child(1) { width: 7%; border-radius: 3cqw 0 0 3cqw; }
+  span:nth-child(2) { width: 42%; }
+  span:nth-child(3) { width: 34%; }
+  span:nth-child(4) { width: 17%; border-radius: 0 3cqw 3cqw 0; }
+}
+
+// ── The base ─────────────────────────────────────────────────────────────────
+
+.base {
+  @include shell;
+  position: relative;
+  flex: 1;
+  border-radius: 1.5cqw 1.5cqw 6cqw 6cqw;
+}
+
+// The front-light button, just under the hinge.
+.light {
+  @include at(48.5, 13, 6.2);
+  @include button;
+  border-radius: 50%;
+  box-shadow: 0 0 0 0.9cqw rgba(0, 0, 0, 0.07), 0 0 0 0.3cqw var(--buttonEdge), 0 0.4cqw 0.5cqw rgba(0, 0, 0, 0.25);
+}
+
+// The power and charge lights, on the right-hand edge.
+.leds {
+  position: absolute;
+  right: 0;
+  top: 8cqw;
+  display: flex;
+  flex-direction: column;
+  gap: 1.6cqw;
+
+  span {
+    width: 1cqw;
+    height: 3cqw;
+    border-radius: 0.5cqw 0 0 0.5cqw;
+    background: #4b4e56;
+  }
+
+  span:first-child {
+    background: #6fe06a;
+    box-shadow: 0 0 1cqw rgba(90, 230, 90, 0.7);
+  }
+}
+
+// Buttons shouldn't select text or pop up a menu when held.
+.dpad > *,
+.a-b > *,
+.start-select > * {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
   cursor: pointer;
-  position: fixed;
-  display: none;
-  z-index: 5;
-  top: 1rem;
-  right: 1rem;
-  background: var(--gameboyColor);
-  font-family: Roboto, sans-serif;
-  color: #000;
-  padding: 1rem 1.6rem;
-  font-weight: 900;
-  font-size: 0.85rem;
-  border: 3px solid black;
-  border-radius: 0.4em;
-  box-shadow: 0.1em 0.1em;
+}
+
+.controls {
+  position: absolute;
+  inset: 0;
   pointer-events: auto;
 }
 
-.popup:hover {
-  transform: translate(-0.05em, -0.05em);
-  box-shadow: 0.15em 0.15em;
+// The D-pad in a big round dip with a raised rim.
+.dpad-well {
+  @include at(26.5, 37, 33);
+  @include recess;
+  border-radius: 50%;
+  box-shadow:
+    inset 0.6cqw 0.9cqw 1cqw rgba(0, 0, 0, 0.3),
+    inset -0.4cqw -0.6cqw 0.6cqw rgba(255, 255, 255, 0.55),
+    0 0 0 1.4cqw rgba(255, 255, 255, 0.18),
+    0 0 0 1.7cqw rgba(0, 0, 0, 0.08);
 }
 
-.popup:active {
-  transform: translate(0.05em, 0.05em);
-  box-shadow: 0.05em 0.05em;
-}
+.dpad {
+  @include at(16.5, 16.5, 25);
+  filter: drop-shadow(0 0 0.3cqw var(--buttonEdge)) drop-shadow(0 0.5cqw 0.5cqw rgba(0, 0, 0, 0.3));
 
-.cube-menu {
-  display: block;
-  opacity: 100%;
-  transition: 0.9s;
-  height: fit-content;
-  position: absolute;
-  font-family: sans-serif;
-  width: 100%;
-  z-index: 6;
-  color: white;
-  bottom: 0.6rem;
-  letter-spacing: 4px;
-  font-size: 0.5rem;
-  padding-right: 15px;
-  text-transform: uppercase;
+  > * {
+    position: absolute;
+    width: calc(100% / 3);
+    height: calc(100% / 3);
+    background: linear-gradient(160deg, #eceef0, var(--buttonLight) 50%, #c9cbd0);
 
-  p {
-    font-size: 0.75rem;
-    font-weight: bolder;
-    letter-spacing: 6px;
-  }
-
-  ul {
-    list-style: none;
-    padding: 0;
-
-    li {
-      margin-top: 0.35rem
+    i {
+      display: none; // the real one has no arrows
     }
   }
+
+  .up { top: 0; left: calc(100% / 3); border-radius: 1cqw 1cqw 0 0; }
+  .down { bottom: 0; left: calc(100% / 3); border-radius: 0 0 1cqw 1cqw; }
+  .left { top: calc(100% / 3); left: 0; border-radius: 1cqw 0 0 1cqw; }
+  .right { top: calc(100% / 3); right: 0; border-radius: 0 1cqw 1cqw 0; }
+
+  .middle {
+    top: calc(100% / 3);
+    left: calc(100% / 3);
+    background: radial-gradient(circle, rgba(0, 0, 0, 0.1) 30%, transparent 32%),
+      linear-gradient(160deg, #eceef0, var(--buttonLight) 50%, #c9cbd0);
+  }
+
+  // Pressed: that arm tips down, so it darkens towards its end.
+  .up.pressed, .up:active { background: linear-gradient(to top, var(--buttonLight), #a9acb3); }
+  .down.pressed, .down:active { background: linear-gradient(to bottom, var(--buttonLight), #a9acb3); }
+  .left.pressed, .left:active { background: linear-gradient(to left, var(--buttonLight), #a9acb3); }
+  .right.pressed, .right:active { background: linear-gradient(to right, var(--buttonLight), #a9acb3); }
 }
 
-.info-banner {
-  z-index: 2;
+// A and B in a slanted, pill-shaped dip; B lower left. Their letters are moulded into them.
+.a-b {
+  @include at(75, 33, 36, 17.5);
+  @include recess;
+  border-radius: 8.75cqw;
+  transform: rotate(-21deg);
+  box-shadow:
+    inset 0.5cqw 0.8cqw 0.9cqw rgba(0, 0, 0, 0.28),
+    inset -0.3cqw -0.5cqw 0.5cqw rgba(255, 255, 255, 0.55),
+    0 0 0 1.2cqw rgba(255, 255, 255, 0.18),
+    0 0 0 1.5cqw rgba(0, 0, 0, 0.08);
+
+  .a,
+  .b {
+    @include button;
+    position: absolute;
+    top: 3.5cqw;
+    width: 10.5cqw;
+    height: 10.5cqw;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.05s;
+
+    span {
+      font-size: 5cqw;
+      font-weight: 400;
+      color: rgba(120, 124, 134, 0.55);
+      text-shadow: 0.15cqw 0.2cqw 0 rgba(255, 255, 255, 0.8);
+      transform: rotate(21deg);
+    }
+
+    &:active,
+    &.pressed {
+      @include pressed;
+      transform: translateY(0.35cqw);
+    }
+  }
+
+  .b { left: 4.75cqw; }
+  .a { right: 4.75cqw; }
+}
+
+// The speaker: a few holes on a staggered grid, about four across, in a rough diamond.
+.speaker {
+  @include at(52, 57, 18.4, 17);
+  background:
+    radial-gradient(circle, rgba(30, 32, 40, 0.65) 0.45cqw, transparent 0.6cqw) 0 0 / 4.6cqw 3.8cqw,
+    radial-gradient(circle, rgba(30, 32, 40, 0.65) 0.45cqw, transparent 0.6cqw) 2.3cqw 1.9cqw / 4.6cqw 3.8cqw;
+  -webkit-mask: radial-gradient(closest-side, #000 88%, transparent 90%);
+  mask: radial-gradient(closest-side, #000 88%, transparent 90%);
+}
+
+// SELECT and START: small round buttons, each in its own round dip, their names printed above.
+.start-select {
   position: absolute;
-  bottom: 0;
-  font-family: sans-serif;
-  color: white;
-  transition: var(--infoBannerTransitionTimeInSeconds);
-  width: 100%;
-  transform: translateY(100%);
-  pointer-events: auto;
+  inset: 0;
+  pointer-events: none;
 
-  .title {
-    text-transform: uppercase;
-    font-weight: bolder;
-    letter-spacing: 6px;
-    padding: 0.4rem;
-    margin: 0.4rem 0;
-    font-size: 0.8rem;
+  .select,
+  .start {
+    @include recess;
+    border-radius: 50%;
+    font-size: 0;
+    pointer-events: auto;
+
+    &::before {
+      @include button;
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 6.7cqw;
+      height: 6.7cqw;
+      margin: -3.35cqw 0 0 -3.35cqw;
+      border-radius: 50%;
+      transition: transform 0.05s;
+    }
+
+    &::after {
+      position: absolute;
+      left: -5cqw;
+      right: -5cqw;
+      bottom: calc(100% + 1.2cqw);
+      font-size: 2.4cqw;
+      letter-spacing: 0.1cqw;
+      color: var(--printColor);
+    }
+
+    &:active::before,
+    &.pressed::before {
+      @include pressed;
+      transform: translateY(0.3cqw);
+    }
   }
 
-  .content {
-    font-size: 0.8rem;
-    padding: 0.4rem;
-    margin: 0.4rem 0;
+  .select {
+    @include at(44, 80, 11.5);
+
+    &::after { content: 'SELECT'; }
+  }
+
+  .start {
+    @include at(61.5, 79.5, 11.5);
+
+    &::after { content: 'START'; }
   }
 }
+
+// ── The help menu, over the screen ───────────────────────────────────────────
 
 .help-menu {
   width: 100%;
   height: 100%;
   font-family: monospace, sans-serif;
-  background: rgba(230, 230, 230, 0.95);
-  font-size: 1rem;
+  font-weight: normal;
+  background: rgba(230, 230, 230, 0.96);
+  font-size: 2.6cqw;
   display: none;
   position: absolute;
   top: 0;
   left: 0;
   z-index: 2;
   color: #0b0a1c;
-  overflow: scroll;
+  overflow: auto;
   pointer-events: auto;
+  text-align: left;
+  box-sizing: border-box;
+  padding: 0 3cqw 3cqw;
 
   .title {
-    margin: 0;
-    padding: 0.5rem 1rem;
-    font-size: 3rem;
+    margin: 0 -3cqw;
+    padding: 1.5cqw 3cqw;
+    font-size: 4cqw;
+    font-weight: bold;
     text-transform: uppercase;
     border-bottom: 1px solid black;
   }
 
-  .content {
+  h3 {
+    margin: 2.5cqw 0 1cqw;
+    font-size: 3cqw;
+  }
 
-    h3 {
-      margin-top: 2em !important;
-    }
+  p {
+    margin: 0.6cqw 0;
+  }
 
-    span {
-      margin-top: 4rem;
-      font-size: 0.5rem;
-    }
+  .konami {
+    margin-top: 4cqw;
+    font-size: 2cqw;
   }
 }
 
-.gameboy {
-  background: var(--gameboyColor);
-  transition: 0.1s;
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  width: 100%;
-  max-width: 768px;
-  margin-right: auto;
-  margin-left: auto;
-  height: 100%; //fallback
-  height: calc(var(--vh, 1vh) * 100);
-  pointer-events: none;
-  overflow: hidden;
-  border-left: 3px solid #2c313e;
-  border-right: 3px solid #2c313e;
-
-}
-
-.controls {
-  z-index: 3;
-  position: relative;
-  width: 100%;
-  box-sizing: border-box;
-  padding: 1rem 1.5rem 1rem 1.5rem;
-  display: flex;
-  justify-content: space-between;
-  pointer-events: auto;
-
-}
-
-.dpad {
-  background: transparent;
-  position: relative;
-  display: inline-block;
-  width: 8rem;
-  height: 8rem;
-  font-size: 2.5rem;
-  line-height: 2.5rem;
-
-  >* {
-    width: 33%;
-    height: 33%;
-    position: absolute;
-    background-color: #565e6a;
-    cursor: pointer;
-
-    i {
-      position: relative;
-      display: block;
-      margin: 0 auto;
-      text-align: center;
-      height: 100%;
-      color: #333a4a;
-      text-shadow: 0px -0.5px 0px #aaa;
-    }
-  }
-
-  .up {
-    top: calc(0% + 4px);
-    left: 33%;
-    border-top: 4px solid black;
-    border-left: 4px solid black;
-    border-right: 4px solid black;
-    border-radius: 5px 5px 0px 0px;
-
-    &:active {
-      background: linear-gradient(to top, #565e6a 0%, #333 100%);
-    }
-
-    i {
-      top: -5px;
-    }
-  }
-
-  .right {
-    top: 33%;
-    left: calc(66% - 4px);
-    border-top: 4px solid black;
-    border-bottom: 4px solid black;
-    border-right: 4px solid black;
-    border-radius: 0px 5px 5px 0px;
-    box-shadow: 0px -2px 0px #888 inset;
-
-    &:active {
-      background: linear-gradient(to right, #565e6a 0%, #333 100%);
-    }
-
-    i {
-      top: -5px;
-    }
-  }
-
-  .down {
-    top: calc(66% - 4px);
-    left: 33%;
-    border-left: 4px solid black;
-    border-bottom: 4px solid black;
-    border-right: 4px solid black;
-    border-radius: 0px 0px 5px 5px;
-    box-shadow: 0px -2px 0px #888 inset;
-
-    &:active {
-      background: linear-gradient(to bottom, #565e6a 0%, #333 100%);
-    }
-  }
-
-  .left {
-    top: 33%;
-    left: calc(0% + 4px);
-    border-top: 4px solid black;
-    border-bottom: 4px solid black;
-    border-left: 4px solid black;
-    border-radius: 5px 0px 0px 5px;
-    box-shadow: 0px -2px 0px #888 inset;
-
-    i {
-      top: -5px;
-    }
-
-    &:active {
-      background: linear-gradient(to left, #565e6a 0%, #333 100%);
-    }
-  }
-
-  .middle {
-    top: 33%;
-    left: 33%;
-    margin: 4px;
-
-    &::after {
-      content: '';
-      position: absolute;
-      top: 15%;
-      left: 15%;
-      display: inline-block;
-      border: 1px solid #6e737a;
-      background: linear-gradient(to bottom, #6d7075 0%, #6d7075 30%, #23272f 70%, #23272f 100%);
-      border-radius: 50%;
-      height: 60%;
-      width: 60%;
-    }
-  }
-
-  .up-down {
-    background-color: #565e6a;
-    border: 4px solid black;
-    border-radius: 5px;
-    width: 20px;
-    height: 60px;
-  }
-
-  .left-right {
-    background-color: #565e6a;
-    border: 4px solid black;
-    border-radius: 5px;
-    width: 60px;
-    height: 20px;
-  }
-}
-
-.display-wrapper {
-  position: relative;
-  transition: 0.1s;
-  z-index: 2;
-  box-sizing: border-box;
-  padding: var(--displayMargin);
-  box-shadow: 0 0 0 10rem var(--gameboyColor);
-  border-radius: 6rem;
-  height: 100%;
-  pointer-events: none;
-}
-
-.display {
-  z-index: 3;
-  box-sizing: border-box;
-  position: relative;
-  border: var(--displayMargin) solid #23252d;
-  border-radius: 4rem;
-  border-bottom: 4rem solid #23252d;
-  height: 100%;
-  pointer-events: none;
-  overflow: hidden;
-}
-
-.header {
-  z-index: 3;
-  position: absolute;
-  display: flex;
-  justify-content: center;
-  margin-top: -3.5rem;
-  width: calc(100% - var(--displayMargin)*2);
-
-  svg {
-    display: block;
-    height: 2.5rem;
-  }
-}
-
-
-.a-b {
-  margin-top: auto;
-  margin-bottom: auto;
-  display: flex;
-  font-family: sans-serif;
-
-  .a,
-  .b {
-    margin: 0.5rem;
-
-    padding: 0;
-    position: relative;
-    font-size: 2.5rem;
-    line-height: 3.75rem;
-    width: 3.75rem;
-    height: 3.75rem;
-    border-radius: 50%;
-    background-color: #2c313e;
-    border: 0;
-    border-bottom: 0.25rem solid #888;
-    box-shadow: -0.125rem 0.125rem 10px black, 0px 0px 0.75rem black inset;
-    text-shadow: 0px -0.125rem 0.125rem #888;
-    color: #2c313e;
-    text-align: center;
-    -webkit-user-select: none;
-    cursor: pointer;
-
-    &:active>span {
-      display: block;
-      transform: translateY(3px);
-    }
-
-    &:active {
-      box-shadow: -0.125rem 0.125rem 0.125rem black, 0px 0px 0.75rem black inset;
-      border-width: 0;
-
-    }
-  }
-
-  .a {
-    top: -15px;
-  }
-
-  .b {
-    margin-right: 1rem;
-    top: 15px;
-  }
-}
-
-.start-select {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  padding: 0;
-  align-items: center;
-  font-family: sans-serif;
-  pointer-events: auto;
-
-  .select,
-  .start {
-    display: inline-block;
-    color: #2c313e;
-    text-shadow: 0px -1px 0px #2c313e;
-    letter-spacing: -1px;
-    width: 4rem;
-    font-size: 16px;
-    text-align: center;
-    margin: 1rem 0 1rem 0;
-
-    &::before {
-      content: '';
-      display: block;
-      margin: 0 auto;
-      width: 2.5rem;
-      height: 10px;
-      margin-bottom: 5px;
-      border-radius: 40%;
-      background: linear-gradient(to bottom, #0b0a1c 0%, #0b0a1c 30%, #62636c 70%, #62636c 100%);
-      background-repeat: no-repeat;
-      border: 2px solid #0b0a1c;
-      box-shadow: 0px -2px 1px rgba(#2c313e, 0.5);
-      cursor: pointer;
-    }
-
-    &:active::before {
-      background: linear-gradient(to bottom, #0b0a1c 0%, #0b0a1c 50%, #62636c 100%);
-    }
-  }
-}
-
-
-@media only screen and (min-width: 768px) {
-  :root {
-    --displayMargin: 3rem;
-  }
-
-  .popup {
-    font-size: 1.3rem;
-  }
-
-  .cube-menu {
-    font-size: 0.8rem;
-    bottom: 2rem;
-
-    p {
-      font-size: 1rem;
-    }
-  }
-
-  .info-banner {
-    margin-bottom: 0.4rem;
-
-    .title {
-      font-size: 1.2rem;
-    }
-
-    .content {
-      font-size: 1rem;
-    }
-  }
-
-  .controls {
-    padding-left: 4rem;
-    padding-right: 4rem;
-  }
-}
+// ── Links, printed small in the bottom left of the base ──────────────────────
 
 .social {
   position: absolute;
-  bottom: 0px;
-  right: 10px;
+  left: 6cqw;
+  bottom: 5cqw;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: flex-end;
-  gap: 5px;
-  z-index: 1000;
-  color: black;
+  align-items: center;
+  gap: 2.6cqw;
+  color: var(--printColor);
   font-family: monospace;
   font-weight: 600;
-  font-size: larger;
+  font-size: 2.8cqw;
+  pointer-events: auto;
 
   div {
     cursor: pointer;
+    display: flex;
   }
 
   svg {
-    fill: #000;
+    fill: var(--printColor);
+    width: 3.6cqw;
+    height: 3.6cqw;
   }
 
   .last-social {
     display: flex;
-    max-height: 25px;
     flex-direction: row;
     align-items: center;
-    gap: 20px;
+    gap: 2.6cqw;
   }
 }
