@@ -192,6 +192,19 @@ function createGameboy() {
   for (const type of ['pointerdown', 'touchend', 'click', 'keydown']) {
     document.addEventListener(type, unlockSound, { passive: true })
   }
+
+  // iOS Safari ignores touch-action and user-scalable=no for double-tap and pinch zoom, so
+  // mashing A or B zoomed the page in. Cancel a second tap that lands soon after the last one,
+  // and the pinch gesture. The buttons listen to pointer events, which still arrive.
+  let lastTouchEnd = 0
+  document.addEventListener('touchend', (event) => {
+    const now = event.timeStamp
+    if (now - lastTouchEnd < 350) event.preventDefault()
+    lastTouchEnd = now
+  }, { passive: false })
+  for (const type of ['gesturestart', 'gesturechange', 'gestureend', 'dblclick']) {
+    document.addEventListener(type, (event) => event.preventDefault(), { passive: false })
+  }
 }
 
 /**

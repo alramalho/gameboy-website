@@ -45,7 +45,7 @@ function silentWav() {
   const rate = 8000, samples = 800;
   const bytes = new Uint8Array(44 + samples);
   const view = new DataView(bytes.buffer);
-  const text = (at: number, s: string) => [...s].forEach((c, i) => view.setUint8(at + i, c.charCodeAt(0)));
+  const text = (at: number, s: string) => { for (let i = 0; i < s.length; i++) view.setUint8(at + i, s.charCodeAt(i)) };
   text(0, 'RIFF'); view.setUint32(4, 36 + samples, true); text(8, 'WAVE');
   text(12, 'fmt '); view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true);
   view.setUint32(24, rate, true); view.setUint32(28, rate, true); view.setUint16(32, 1, true); view.setUint16(34, 8, true);
