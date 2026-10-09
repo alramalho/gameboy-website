@@ -3,9 +3,9 @@ import { playSound as playEffect, unlockSound, Sound } from "./sound";
 
 /**
  * The Game Boy is a frame around the game (alramalho/pokemon-website), which runs
- * in an iframe in the screen. Its D-pad, A and B are the game's buttons: pressing
+ * in an iframe in the screen. Its D-pad, A, B and START are the game's buttons: pressing
  * one sends it to the game, and letting go releases it, so holding a direction keeps
- * walking. START shows the help menu and SELECT flashes the Game Boy's colour.
+ * walking. SELECT shows the help menu; the Konami code flashes the Game Boy's colour.
  */
 
 // Where the game is served: pokemon.alexramalho.dev (Vercel project pokemon-website), or the
@@ -13,8 +13,8 @@ import { playSound as playEffect, unlockSound, Sound } from "./sound";
 const GAME_URL = process.env.GAME_URL
   || (process.env.NODE_ENV === "production" ? "https://pokemon.alexramalho.dev" : "http://localhost:5188");
 
-type GameButton = "up" | "down" | "left" | "right" | "a" | "b"
-type Action = GameButton | "select" | "start"
+type GameButton = "up" | "down" | "left" | "right" | "a" | "b" | "start"
+type Action = GameButton | "select"
 
 // Game Boy Advance SP shells: platinum, cobalt, flame, onyx, pearl pink, graphite.
 const gameboyColors = [`#bbbcc1`, `#3b55a4`, `#c73a2c`, `#2e3036`, `#e9b8c4`, `#6d7078`]
@@ -80,11 +80,8 @@ function fireControl(command: Action) {
     case "b":
       if (isHelpMenuOn()) toggleHelpMenu();
       break
-    case "start":
-      toggleHelpMenu()
-      break
     case "select":
-      triggerKonami()
+      toggleHelpMenu()
       break
   }
   last10Moves.enqueue(command)
@@ -111,7 +108,7 @@ function createGameboy() {
     const button = document.createElement('div')
     button.innerHTML = innerHTML
     button.className = className
-    const isGameButton = action != "select" && action != "start"
+    const isGameButton = action != "select"
     let down = false
     const release = () => {
       if (!down) return
@@ -162,8 +159,8 @@ function createGameboy() {
   // Once you click into the game it hears the keyboard itself.
   const KEY_ACTIONS: Record<string, Action> = {
     ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right',
-    KeyZ: 'a', Enter: 'a', KeyX: 'b', Escape: 'b', Backspace: 'b',
-    ShiftRight: 'select', ShiftLeft: 'select', KeyH: 'start',
+    KeyZ: 'a', Enter: 'start', KeyX: 'b', Escape: 'b', Backspace: 'b',
+    ShiftRight: 'select', ShiftLeft: 'select', KeyH: 'select',
   }
   document.addEventListener('keydown', (event) => {
     const action = KEY_ACTIONS[event.code]
@@ -171,12 +168,12 @@ function createGameboy() {
     if (event.repeat) return
     sendToGame({ kind: 'key', code: event.code, down: true })
     if (action) fireControl(action)
-    if (action == 'start' || action == 'select') showPressed(action, true)
+    if (action == 'select') showPressed(action, true)
   })
   document.addEventListener('keyup', (event) => {
     sendToGame({ kind: 'key', code: event.code, down: false })
     const action = KEY_ACTIONS[event.code]
-    if (action == 'start' || action == 'select') showPressed(action, false)
+    if (action == 'select') showPressed(action, false)
   })
 
   // The game says whenever one of its buttons goes down or up, whether a key or a Game Boy
@@ -186,6 +183,8 @@ function createGameboy() {
     if (event.data?.kind === 'held') showPressed(event.data.button, !!event.data.down)
     // The game's sound effects play here, where the taps are (see sound.ts).
     if (event.data?.kind === 'sound') playEffect(event.data.sound as Sound)
+    if (event.data?.kind === 'showcase-open') openShowcase(event.data.module, event.data.options)
+    if (event.data?.kind === 'showcase-press') showcase?.press(event.data.button)
   })
 
   // Browsers only allow sound after a tap or key press on the page, so start it with the first.
@@ -265,6 +264,64 @@ function createDpad(pad: HTMLElement) {
   pad.addEventListener('pointercancel', lift)
   pad.addEventListener('lostpointercapture', lift)
   pad.addEventListener('contextmenu', (event) => event.preventDefault())
+}
+
+/**
+ * One of Alex's paintings, lifted out of the game in 3D: it leaves the Game Boy's screen from
+ * where it was in the game and is shown over the whole page. The code for it lives with the game
+ * (pokemon-website, src/showcase/) and is loaded from there; the game still hears A and B and
+ * passes them on (showcase-press), and is told when it's over.
+ */
+type Rect = { x: number, y: number, width: number, height: number }
+let showcase: { press(button: 'a' | 'b'): void } | undefined
+
+// Parcel would try to bundle a plain import(); this loads the module from the game's server.
+const importFromGame = new Function('url', 'return import(url)') as (url: string) => Promise<any>
+
+async function openShowcase(module: string, options: any) {
+  const origin = new URL(GAME_URL).origin
+  const fromGame = (url: unknown) => typeof url === 'string' && new URL(url).origin === origin
+  if (showcase || !fromGame(module) || !fromGame(options?.image) || !fromGame(options?.mini)) return
+  // The game measured in its own pixels: move its rects onto the page.
+  const screen = game.getBoundingClientRect()
+  const k = screen.width / game.clientWidth
+  const onPage = (r: Rect): Rect => ({ x: screen.left + r.x * k, y: screen.top + r.y * k, width: r.width * k, height: r.height * k })
+  const reply = (message: object) => game.contentWindow?.postMessage(message, origin)
+  reply({ kind: 'showcase-ack' }) // so the game knows this page shows it (and doesn't itself)
+  try {
+    const { openShowcase } = await importFromGame(module)
+    showcase = openShowcase({
+      image: options.image, mini: options.mini, title: String(options.title ?? ''),
+      caption: options.caption && String(options.caption), collectable: options.collectable,
+      from: onPage(options.from), home: onPage(options.home), area: showcaseArea,
+      onReady: () => reply({ kind: 'showcase-ready' }),
+      // Tapping A or B under the painting presses the Game Boy's button.
+      onTap: (button: GameButton) => {
+        sendToGame({ kind: 'button', button, down: true })
+        setTimeout(() => sendToGame({ kind: 'button', button, down: false }), 60)
+      },
+      onClose: (choice: string) => {
+        showcase = undefined
+        reply({ kind: 'showcase-closed', choice })
+      },
+    })
+  } catch {
+    reply({ kind: 'showcase-closed', choice: 'leave' })
+  }
+}
+
+/**
+ * Where the painting may be shown: everything above the Game Boy's buttons, with some room to
+ * spare, so on a phone it never covers the controls you need to collect it or leave it.
+ */
+function showcaseArea(): Rect {
+  const PADDING = 16
+  const screen = game.getBoundingClientRect()
+  const controls = ['.controls', '.start-select']
+    .map((selector) => document.querySelector(selector)?.getBoundingClientRect().top)
+    .filter((top): top is number => top !== undefined)
+  const bottom = Math.max(screen.bottom + 4, Math.min(window.innerHeight, ...controls) - PADDING)
+  return { x: 0, y: 0, width: window.innerWidth, height: bottom }
 }
 
 const BUTTON_ELEMENTS: Record<string, string> = {
