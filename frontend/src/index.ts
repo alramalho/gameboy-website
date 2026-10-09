@@ -311,17 +311,28 @@ async function openShowcase(module: string, options: any) {
 }
 
 /**
- * Where the painting may be shown: everything above the Game Boy's buttons, with some room to
- * spare, so on a phone it never covers the controls you need to collect it or leave it.
+ * Where the painting may rest: never over the Game Boy's buttons, with room to spare, so on a
+ * phone it never covers the controls you need to collect it or leave it. Of the free space above
+ * the buttons, and beside the Game Boy (on a wide screen), it takes whichever fits it biggest.
  */
 function showcaseArea(): Rect {
   const PADDING = 16
+  const [w, h] = [window.innerWidth, window.innerHeight]
   const screen = game.getBoundingClientRect()
-  const controls = ['.controls', '.start-select']
-    .map((selector) => document.querySelector(selector)?.getBoundingClientRect().top)
-    .filter((top): top is number => top !== undefined)
-  const bottom = Math.max(screen.bottom + 4, Math.min(window.innerHeight, ...controls) - PADDING)
-  return { x: 0, y: 0, width: window.innerWidth, height: bottom }
+  const boxes = ['.controls', '.start-select']
+    .map((selector) => document.querySelector(selector)?.getBoundingClientRect())
+    .filter((box): box is DOMRect => !!box)
+  const top = Math.min(h, ...boxes.map((box) => box.top)) - PADDING
+  const left = Math.min(...boxes.map((box) => box.left), screen.left) - PADDING
+  const right = Math.max(...boxes.map((box) => box.right), screen.right) + PADDING
+  const candidates: Rect[] = [
+    { x: 0, y: 0, width: w, height: Math.max(screen.bottom + 4, top) }, // above the buttons
+    { x: 0, y: 0, width: Math.max(0, left), height: h }, // left of the Game Boy
+    { x: right, y: 0, width: Math.max(0, w - right), height: h }, // right of it
+  ]
+  // How tall the painting could be in each (it's about 0.7 as wide as tall, with words under it).
+  const fits = (r: Rect) => Math.min((r.height - 110) * 0.84, r.width * 0.78 / 0.7)
+  return candidates.reduce((best, r) => (fits(r) > fits(best) * 1.15 ? r : best))
 }
 
 const BUTTON_ELEMENTS: Record<string, string> = {
