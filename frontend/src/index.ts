@@ -25,6 +25,8 @@ function init() {
   createGame()
   createGameboy()
   createPortfolio()
+  placeKeys()
+  window.addEventListener('resize', placeKeys)
 }
 
 /** Put the game in the screen. */
@@ -203,13 +205,13 @@ function createGameboy() {
   // Once you click into the game it hears the keyboard itself.
   const KEY_ACTIONS: Record<string, Action> = {
     ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right',
-    KeyZ: 'a', Enter: 'start', KeyX: 'b', Escape: 'b', Backspace: 'b',
+    KeyA: 'a', KeyZ: 'a', KeyB: 'b', KeyX: 'b', Escape: 'b', Backspace: 'b', Enter: 'start',
     ShiftRight: 'select', ShiftLeft: 'select', KeyH: 'select',
   }
   document.addEventListener('keydown', (event) => {
     if (inPortfolio()) return // reading: the keys are the page's
     const action = KEY_ACTIONS[event.code]
-    if (action || event.code == 'Space' || /^Key[WASD]$/.test(event.code)) event.preventDefault()
+    if (action || event.code == 'Space') event.preventDefault()
     if (event.repeat) return
     sendToGame({ kind: 'key', code: event.code, down: true })
     if (action) fireControl(action)
@@ -417,6 +419,18 @@ const BUTTON_ELEMENTS: Record<string, string> = {
 function showPressed(button: string, down: boolean) {
   const selector = BUTTON_ELEMENTS[button]
   if (selector) document.querySelector(selector)?.classList.toggle('pressed', down)
+  document.querySelectorAll(`.keys kbd[data-button="${button}"]`).forEach((key) => key.classList.toggle('pressed', down))
+}
+
+/**
+ * Beside the Game Boy on a computer, the keys that play it, which press down as you use them.
+ * Shown only where there's a mouse and room for it to the right of the console.
+ */
+function placeKeys() {
+  const keys = document.querySelector('.keys') as HTMLElement
+  const gameboy = document.querySelector('.gameboy') as HTMLElement
+  if (!keys || !gameboy) return
+  keys.classList.toggle('fits', window.innerWidth - gameboy.getBoundingClientRect().right >= 260)
 }
 
 init();

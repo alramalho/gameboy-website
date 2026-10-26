@@ -72,11 +72,11 @@
             <p>Select — Show/hide this help</p>
 
             <h3>Keyboard</h3>
-            <p>Arrows or WASD = D-pad</p>
-            <p>Z = A, Enter = Start</p>
-            <p>X or Backspace = B (hold to run)</p>
-            <p>hold Space = run fast</p>
-            <p>H or Shift = Select</p>
+            <p>Arrows = D-pad</p>
+            <p>A (or Z) = A, B (or X) = B (hold to run)</p>
+            <p>Enter = Start</p>
+            <p>Shift or H = Select</p>
+            <p>hold Space = fast-forward</p>
 
 
             <p class="konami">Konami code — the plain portfolio</p>
@@ -114,6 +114,18 @@
       </div>
     </div>
   </div>
+
+  <!-- The keys that play it, beside the Game Boy on a computer (styles.scss, placeKeys in index.ts). -->
+  <aside class="keys" aria-label="Keyboard controls">
+    <div class="title">Keyboard</div>
+    <div class="row"><span class="caps"><kbd data-button="up">↑</kbd><kbd data-button="down">↓</kbd><kbd
+          data-button="left">←</kbd><kbd data-button="right">→</kbd></span><span>walk</span></div>
+    <div class="row"><span class="caps"><kbd data-button="a">A</kbd></span><span>talk, read, choose</span></div>
+    <div class="row"><span class="caps"><kbd data-button="b">B</kbd></span><span>back · hold to run</span></div>
+    <div class="row"><span class="caps"><kbd class="wide" data-button="start">Enter</kbd></span><span>start · your bag</span></div>
+    <div class="row"><span class="caps"><kbd class="wide" data-button="select">Shift</kbd></span><span>select · help</span></div>
+    <div class="row"><span class="caps"><kbd class="wide" data-button="fast">Space</kbd></span><span>hold to fast-forward</span></div>
+  </aside>
 
   <!-- The plain portfolio: what the Konami code turns the page into (src/portfolio.scss). Still
        to be filled in: the bits marked "to do". -->

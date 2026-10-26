@@ -549,3 +549,73 @@ a {
     gap: 2.6cqw;
   }
 }
+
+// The keys that play it, beside the Game Boy on a computer: keycaps like the console's buttons,
+// pressing down as they're used (placeKeys in index.ts shows it where there's room).
+.keys {
+  display: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .keys.fits {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: fixed;
+    top: 50%;
+    left: calc(50% + var(--gbw) / 2 + 48px);
+    transform: translateY(-50%);
+    color: #5d564c;
+    text-align: left;
+    font: 500 13px/1.2 ui-rounded, 'SF Pro Rounded', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    pointer-events: none;
+  }
+}
+
+.keys {
+  .title {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    opacity: 0.65;
+    margin-bottom: 2px;
+  }
+
+  .row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .caps {
+    display: flex;
+    gap: 4px;
+    min-width: 112px;
+  }
+
+  kbd {
+    display: inline-grid;
+    place-items: center;
+    min-width: 24px;
+    height: 24px;
+    padding: 0 6px;
+    box-sizing: border-box;
+    border-radius: 6px;
+    background: linear-gradient(#f6f6f8, #dcdde2);
+    box-shadow: 0 2px 0 #a6a8b0, inset 0 1px 0 #fff;
+    color: #4a4e58;
+    font: 700 12px/1 inherit;
+    font-family: inherit;
+    transition: transform 0.05s, box-shadow 0.05s, background 0.05s;
+
+    &.pressed {
+      transform: translateY(2px);
+      box-shadow: 0 0 0 #a6a8b0, inset 0 1px 0 #fff;
+      background: #d2d3d8;
+    }
+  }
+}
+
+body.portfolio-mode .keys {
+  display: none !important;
+}
