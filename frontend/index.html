@@ -2,13 +2,17 @@
 <html lang="en">
 
 <head>
-  <title>Alex's corner</title>
+  <title>alexramalho</title>
   <meta name="description" content="Alex Ramalho website in a gameboy color fashion">
   <meta name="keywords" content="HTML, CSS, Gameboy, Color, Nintendo, Alex, Al, Alexandre, Ramalho">
   <meta name="author" content="Alexandre Ramalho">
   <meta charset="UTF-8" />
   <link rel="stylesheet" href="src/styles.scss" />
-  <link rel="icon" href="src/assets/me.ico" />
+  <link rel="stylesheet" href="src/portfolio.scss" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&display=swap" />
+  <link rel="icon" href="src/assets/pokeball.ico" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
@@ -47,9 +51,6 @@
           </svg>
         </div>
         <div class="last-social">
-          <div onclick="window.open('https://app.9am.works/hire/alex-ramalho')">
-            <p><i>Hire</i></p>
-          </div>
           <div onclick="window.open('https://substack.com/@alexramalho')">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-substack"
               viewBox="0 0 16 16">
@@ -78,7 +79,7 @@
             <p>H or Shift = Select</p>
 
 
-            <p class="konami">Have fun with konami code</p>
+            <p class="konami">Konami code — the plain portfolio</p>
           </div>
         </div>
       </div>
@@ -113,6 +114,68 @@
       </div>
     </div>
   </div>
+
+  <!-- The plain portfolio: what the Konami code turns the page into (src/portfolio.scss). Still
+       to be filled in: the bits marked "to do". -->
+  <main class="portfolio" id="portfolio">
+    <header>
+      <h1>hi, i'm alex</h1>
+      <p class="todo">a few lines about me, still to be written.</p>
+      <p>i build things, paint watercolours now and then, and co-founded amigos do chapim. this
+        website is a pokémon emerald-style game; this page is the short way round it.</p>
+      <nav class="links">
+        <a target="_blank" rel="noopener" href="https://www.github.com/alramalho">github</a>
+        <a target="_blank" rel="noopener" href="https://www.linkedin.com/in/alexandre-francisco-ramalho/">linkedin</a>
+        <a target="_blank" rel="noopener" href="https://www.twitter.com/_alexramalho">x</a>
+        <a target="_blank" rel="noopener" href="https://substack.com/@alexramalho">substack</a>
+      </nav>
+    </header>
+
+    <section>
+      <h2>projects</h2>
+      <ul>
+        <li><span class="date">2026</span><span><a href="/">alexramalho.dev</a> <span class="note">— this
+              website, as a game: my corner of odivelas, in the style of pokémon emerald</span></span></li>
+        <li><span class="date"></span><span class="todo">more to come</span></li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>experience</h2>
+      <ul>
+        <li><span class="date"></span><span class="todo">to do</span></li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>elsewhere</h2>
+      <ul>
+        <li><span class="date"></span><span>amigos do chapim <span class="note">— co-founder. an association giving kids
+              from underfunded neighbourhoods a way into creative expression</span></span></li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>paintings</h2>
+      <ul>
+        <li><span class="date">october 31, 2024</span><span><a target="_blank" rel="noopener"
+            href="https://pokemon.alexramalho.dev/assets/paintings/raccoon.jpg">raccoon</a> <span class="note">— watercolour</span></span></li>
+        <li><span class="date">october 25, 2024</span><span><a target="_blank" rel="noopener"
+            href="https://pokemon.alexramalho.dev/assets/paintings/lantern.jpg">lantern</a> <span class="note">— watercolour</span></span></li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>writing</h2>
+      <ul>
+        <li><span class="date"></span><span>on <a target="_blank" rel="noopener" href="https://substack.com/@alexramalho">substack</a></span></li>
+      </ul>
+    </section>
+
+    <footer>
+      <button class="back" type="button">← back to the game</button>
+    </footer>
+  </main>
 
   <script src="src/index.ts"></script>
   <audio id="error" src="https://alramalhosandbox.s3.eu-west-1.amazonaws.com/sounds/bump.wav"></audio>

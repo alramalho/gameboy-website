@@ -1,4 +1,3 @@
-import { Queue } from "./queue";
 import { playSound as playEffect, unlockSound, Sound } from "./sound";
 
 /**
@@ -20,12 +19,12 @@ type Action = GameButton | "select"
 const gameboyColors = [`#bbbcc1`, `#3b55a4`, `#c73a2c`, `#2e3036`, `#e9b8c4`, `#6d7078`]
 
 let game: HTMLIFrameElement
-const last10Moves = new Queue<Action>(10)
 
 function init() {
   console.log('⭐ Konami? ⭐')
   createGame()
   createGameboy()
+  createPortfolio()
 }
 
 /** Put the game in the screen. */
@@ -33,7 +32,7 @@ function createGame() {
   game = document.createElement('iframe')
   game.className = 'game'
   game.src = GAME_URL
-  game.title = "Alex's House"
+  game.title = 'alexramalho'
   game.allow = 'autoplay; fullscreen'
   document.querySelector('.display').appendChild(game)
 }
@@ -45,7 +44,7 @@ function sendToGame(message: { kind: 'button', button: GameButton, down: boolean
 
 function playSound(id: string) {
   const audio = document.getElementById(id) as HTMLAudioElement;
-  audio.play();
+  audio.play().catch(() => { }); // not allowed before the page has been tapped: then silence
 }
 
 function isHelpMenuOn() {
@@ -58,12 +57,11 @@ function toggleHelpMenu() {
   helpMenu.style.display = isHelpMenuOn() ? 'none' : 'block'
 }
 
-function triggerKonami() {
+/** The Game Boy flashes through the SP's colours. */
+function flashColours() {
   function assignGameboyRandomColor() {
     document.documentElement.style.setProperty('--gameboyColor', gameboyColors[Math.floor(Math.random() * gameboyColors.length)]);
   }
-
-  playSound('konami')
 
   const r = setInterval(() => {
     assignGameboyRandomColor()
@@ -84,13 +82,59 @@ function fireControl(command: Action) {
       toggleHelpMenu()
       break
   }
-  last10Moves.enqueue(command)
+}
 
-  const konamiCode: Action[] = ['up', 'up', 'down', 'down', 'left', 'left', 'right', 'right', 'b', 'a']
-  const lastMoves = last10Moves.getArray()
-  if (lastMoves.length == 10 && lastMoves.every((move, i) => move == konamiCode[i])) {
-    triggerKonami()
+/**
+ * The Konami code (the game hears it, whatever pressed it, and tells us): sparkles all over the
+ * Game Boy, its colours flashing, a flash of light, and the page is the plain portfolio instead
+ * (#portfolio, which also opens it straight away). Its "back to the game" undoes it.
+ */
+function createPortfolio() {
+  document.querySelector('.portfolio .back')?.addEventListener('click', leavePortfolio)
+  if (location.hash === '#portfolio') showPortfolio(true)
+}
+
+function inPortfolio() {
+  return document.body.classList.contains('portfolio-mode')
+}
+
+function enterPortfolio() {
+  if (inPortfolio()) return
+  playSound('konami')
+  flashColours()
+  const box = (document.querySelector('.gameboy') as HTMLElement).getBoundingClientRect()
+  const sparkles = document.createElement('div')
+  sparkles.className = 'sparkles'
+  for (let i = 0; i < 46; i++) {
+    const star = document.createElement('span')
+    star.style.left = `${box.left - 30 + Math.random() * (box.width + 60)}px`
+    star.style.top = `${box.top - 30 + Math.random() * (box.height + 60)}px`
+    star.style.setProperty('--size', `${10 + Math.random() * 22}px`)
+    star.style.setProperty('--delay', `${Math.random() * 0.7}s`)
+    sparkles.appendChild(star)
   }
+  const flash = document.createElement('div')
+  flash.className = 'flash'
+  document.body.append(sparkles, flash)
+  setTimeout(() => flash.classList.add('on'), 1050)
+  setTimeout(() => {
+    showPortfolio(true)
+    sparkles.remove()
+    flash.classList.remove('on')
+    setTimeout(() => flash.remove(), 400)
+  }, 1350)
+}
+
+function showPortfolio(on: boolean) {
+  document.documentElement.classList.toggle('portfolio-mode', on)
+  document.body.classList.toggle('portfolio-mode', on)
+  history.replaceState(null, '', on ? '#portfolio' : location.pathname + location.search)
+  window.scrollTo(0, 0)
+}
+
+function leavePortfolio() {
+  showPortfolio(false)
+  game.focus()
 }
 
 function createGameboy() {
@@ -163,6 +207,7 @@ function createGameboy() {
     ShiftRight: 'select', ShiftLeft: 'select', KeyH: 'select',
   }
   document.addEventListener('keydown', (event) => {
+    if (inPortfolio()) return // reading: the keys are the page's
     const action = KEY_ACTIONS[event.code]
     if (action || event.code == 'Space' || /^Key[WASD]$/.test(event.code)) event.preventDefault()
     if (event.repeat) return
@@ -171,6 +216,7 @@ function createGameboy() {
     if (action == 'select') showPressed(action, true)
   })
   document.addEventListener('keyup', (event) => {
+    if (inPortfolio()) return
     sendToGame({ kind: 'key', code: event.code, down: false })
     const action = KEY_ACTIONS[event.code]
     if (action == 'select') showPressed(action, false)
@@ -183,6 +229,8 @@ function createGameboy() {
     if (event.data?.kind === 'held') showPressed(event.data.button, !!event.data.down)
     // The game's sound effects play here, where the taps are (see sound.ts).
     if (event.data?.kind === 'sound') playEffect(event.data.sound as Sound)
+    if (event.data?.kind === 'konami') enterPortfolio()
+    if (event.data?.kind === 'showcase-preload') preloadShowcase(event.data.module, event.data.images)
     if (event.data?.kind === 'showcase-open') openShowcase(event.data.module, event.data.options)
     if (event.data?.kind === 'showcase-press') showcase?.press(event.data.button)
   })
@@ -198,11 +246,11 @@ function createGameboy() {
   let lastTouchEnd = 0
   document.addEventListener('touchend', (event) => {
     const now = event.timeStamp
-    if (now - lastTouchEnd < 350) event.preventDefault()
+    if (now - lastTouchEnd < 350 && !inPortfolio()) event.preventDefault()
     lastTouchEnd = now
   }, { passive: false })
   for (const type of ['gesturestart', 'gesturechange', 'gestureend', 'dblclick']) {
-    document.addEventListener(type, (event) => event.preventDefault(), { passive: false })
+    document.addEventListener(type, (event) => inPortfolio() || event.preventDefault(), { passive: false })
   }
 }
 
@@ -277,10 +325,35 @@ let showcase: { press(button: 'a' | 'b'): void } | undefined
 
 // Parcel would try to bundle a plain import(); this loads the module from the game's server.
 const importFromGame = new Function('url', 'return import(url)') as (url: string) => Promise<any>
+const gameOrigin = () => new URL(GAME_URL).origin
+const fromGame = (url: unknown) => {
+  try {
+    return typeof url === 'string' && new URL(url).origin === gameOrigin()
+  } catch {
+    return false
+  }
+}
+const modules = new Map<string, Promise<any>>()
+/** The showcase's code, loaded once from the game's site and kept. */
+function showcaseModule(url: string) {
+  if (!modules.has(url)) {
+    const loading = importFromGame(url)
+    loading.catch(() => modules.delete(url)) // try again next time
+    modules.set(url, loading)
+  }
+  return modules.get(url)!
+}
+
+/** The game has paintings near: get the code and their pictures ready, so it opens at once. */
+function preloadShowcase(module: unknown, images: unknown) {
+  if (!fromGame(module) || !Array.isArray(images)) return
+  showcaseModule(module as string)
+    .then((showcase) => showcase.preloadShowcase?.(images.filter(fromGame)))
+    .catch(() => { })
+}
 
 async function openShowcase(module: string, options: any) {
-  const origin = new URL(GAME_URL).origin
-  const fromGame = (url: unknown) => typeof url === 'string' && new URL(url).origin === origin
+  const origin = gameOrigin()
   if (showcase || !fromGame(module) || !fromGame(options?.image) || !fromGame(options?.mini)) return
   // The game measured in its own pixels: move its rects onto the page.
   const screen = game.getBoundingClientRect()
@@ -289,7 +362,7 @@ async function openShowcase(module: string, options: any) {
   const reply = (message: object) => game.contentWindow?.postMessage(message, origin)
   reply({ kind: 'showcase-ack' }) // so the game knows this page shows it (and doesn't itself)
   try {
-    const { openShowcase } = await importFromGame(module)
+    const { openShowcase } = await showcaseModule(module)
     showcase = openShowcase({
       image: options.image, mini: options.mini, title: String(options.title ?? ''),
       caption: options.caption && String(options.caption), collectable: options.collectable,
