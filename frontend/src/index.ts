@@ -368,7 +368,6 @@ async function openShowcase(module: string, options: any) {
     showcase = openShowcase({
       image: options.image, mini: options.mini, title: String(options.title ?? ''),
       caption: options.caption && String(options.caption), collectable: options.collectable,
-      plain: !!options.plain, closeLabel: options.closeLabel && String(options.closeLabel),
       from: onPage(options.from), home: onPage(options.home), area: showcaseArea,
       onReady: () => reply({ kind: 'showcase-ready' }),
       // Tapping A or B under the painting presses the Game Boy's button.
