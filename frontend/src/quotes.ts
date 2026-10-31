@@ -81,7 +81,7 @@ export const QUOTES: Quote[] = [
   { text: 'The exercise of imagination is dangerous to those who profit from the way things are because it has the power to show that the way things are is not permanent, not universal, not necessary.', by: 'Ursula K. Le Guin' },
   { text: 'The first man who, having enclosed a piece of ground, bethought himself of saying “This is mine”, and found people simple enough to believe him, was the real founder of civil society. From how many crimes, wars and murders, from how many horrors and misfortunes might not any one have saved mankind, by pulling up the stakes, or filling up the ditch, and crying to his fellows: “Beware of listening to this impostor; you are undone if you once forget that the fruits of the earth belong to us all, and the earth itself to nobody.”', by: 'Jean-Jacques Rousseau' },
   { text: 'Where there is no vision, the people perish.', by: 'Proverbs' },
-  { text: 'If you can’t explain it to a six-year-old, you don’t understand it yourself.', by: 'Albert Einstein' },
+  { text: 'If you can’t explain it to a six-year-old, you don’t understand it yourself.', by: 'often attributed to Albert Einstein' },
   { text: 'Most men lead lives of quiet desperation.', by: 'Henry David Thoreau' },
   { text: 'A vida dá flores a quem as planta mais.', by: 'Slow J, Pai Eu' },
   { text: 'The surest way to corrupt a youth is to instruct him to hold in higher esteem those who think alike than those who think differently.', by: 'Friedrich Nietzsche' },
