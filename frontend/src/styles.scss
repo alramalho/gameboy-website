@@ -528,41 +528,6 @@ a {
   }
 }
 
-// ── Links, printed small on the lid under the screen, between its lower bumpers ────
-
-.social {
-  position: absolute;
-  left: 50%;
-  bottom: 1.6cqw;
-  transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  gap: 2.6cqw;
-  color: var(--printColor);
-  font-family: monospace;
-  font-weight: 600;
-  font-size: 2.8cqw;
-  pointer-events: auto;
-
-  div {
-    cursor: pointer;
-    display: flex;
-  }
-
-  svg {
-    fill: var(--printColor);
-    width: 3.6cqw;
-    height: 3.6cqw;
-  }
-
-  .last-social {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 2.6cqw;
-  }
-}
-
 // The keys that play it, beside the Game Boy on a computer: keycaps like the console's buttons,
 // pressing down as they're used (placeKeys in index.ts shows it where there's room).
 .keys {

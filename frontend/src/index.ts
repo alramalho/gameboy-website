@@ -1,4 +1,5 @@
 import { playSound as playEffect, unlockSound, Sound } from "./sound";
+import { QUOTES } from "./quotes";
 
 /**
  * The Game Boy is a frame around the game (alramalho/pokemon-website), which runs
@@ -93,8 +94,26 @@ function fireControl(command: Action) {
  */
 function createPortfolio() {
   document.querySelector('.portfolio .back')?.addEventListener('click', leavePortfolio)
+  document.querySelector('.portfolio .lever')?.addEventListener('click', pullLever)
   showFoundPaintings()
   if (location.hash === '#portfolio') showPortfolio(true)
+}
+
+/** The lever beside the quote: it swings, and out comes another of Alex's favourites. */
+function pullLever(this: HTMLElement) {
+  const quote = document.querySelector<HTMLElement>('.portfolio .quote > div')!
+  const shown = quote.querySelector('blockquote')!.textContent
+  const others = QUOTES.filter((q) => q.text !== shown)
+  const next = others[Math.floor(Math.random() * others.length)]
+  this.classList.remove('pulled')
+  void this.offsetWidth // restart the swing
+  this.classList.add('pulled')
+  quote.classList.add('changing')
+  setTimeout(() => {
+    quote.querySelector('blockquote')!.textContent = next.text
+    quote.querySelector('figcaption')!.textContent = next.by
+    quote.classList.remove('changing')
+  }, 180)
 }
 
 /**
