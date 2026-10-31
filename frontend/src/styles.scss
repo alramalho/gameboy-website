@@ -143,16 +143,6 @@ a {
     height: var(--screenH);
     filter: none;
   }
-
-  .bumper {
-    width: 4.2cqw;
-    height: 4.2cqw;
-
-    &.top-left, &.top-middle, &.top-right { top: 0.8cqw; }
-    &.bottom-left, &.bottom-right { bottom: 1cqw; }
-    &.top-left, &.bottom-left { left: 2.5cqw; }
-    &.top-right, &.bottom-right { right: 2.5cqw; }
-  }
 }
 
 // ── The lid ──────────────────────────────────────────────────────────────────
@@ -182,6 +172,21 @@ a {
   &.top-right { right: 5.5cqw; top: 3cqw; }
   &.bottom-left { left: 3.5cqw; bottom: 2.5cqw; }
   &.bottom-right { right: 3.5cqw; bottom: 2.5cqw; }
+}
+
+// On a phone the screen is bigger and the margins round it thinner: smaller bumpers, tucked
+// into the margins so the screen never covers them. (After the rule above, so they win.)
+@media (max-aspect-ratio: 5/8) and (max-width: 600px) {
+  .bumper {
+    width: 4.2cqw;
+    height: 4.2cqw;
+
+    &.top-left, &.top-middle, &.top-right { top: 0.8cqw; }
+    &.bottom-left, &.bottom-right { bottom: 1cqw; }
+    &.top-left, &.bottom-left { left: 2.5cqw; }
+    &.top-right, &.bottom-right { right: 2.5cqw; }
+    &.top-middle { left: 47.9cqw; }
+  }
 }
 
 // The black bezel: a thin border round the screen, wider underneath for the logo.
@@ -222,7 +227,7 @@ a {
   justify-content: center;
   margin-top: 1.5cqw;
 
-  svg {
+  img {
     display: block;
     height: 4.6cqw;
     width: auto;
