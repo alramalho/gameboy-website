@@ -37,7 +37,7 @@ body.portfolio-mode {
   }
 }
 
-// 4.8s: breathing in and out four times, with a blink near the end.
+// 9.6s: breathing in and out four times, slowly, with a blink near the end.
 @keyframes alex-idles {
   0% { background-position-x: 0; }
   12.5% { background-position-x: calc(-64px * var(--scale)); }
@@ -47,10 +47,10 @@ body.portfolio-mode {
   62.5% { background-position-x: calc(-64px * var(--scale)); }
   75% { background-position-x: 0; }
   81% { background-position-x: calc(-128px * var(--scale)); }
-  84% { background-position-x: 0; }
+  82.5% { background-position-x: 0; }
   87.5% { background-position-x: calc(-64px * var(--scale)); }
   93% { background-position-x: calc(-192px * var(--scale)); }
-  96% { background-position-x: calc(-64px * var(--scale)); }
+  94.5% { background-position-x: calc(-64px * var(--scale)); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -81,7 +81,7 @@ body.portfolio-mode {
     margin: 0 0 14px calc(-14px * var(--scale)); // his sprite has 14 empty pixels on the left
     background: url('./assets/alex-idle.png') 0 0 / calc(256px * var(--scale)) auto no-repeat;
     image-rendering: pixelated;
-    animation: alex-idles 4.8s step-end infinite;
+    animation: alex-idles 9.6s step-end infinite;
   }
 
   h1 {
