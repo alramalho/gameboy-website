@@ -128,8 +128,10 @@ body.portfolio-mode {
     align-items: center;
     gap: 20px;
     margin: 0 0 28px;
-    padding: 2px 0 2px 16px;
-    border-left: 2px solid $rule;
+    color: $faint;
+    font-size: 0.85rem;
+    text-transform: lowercase;
+    opacity: 0.75;
 
     > div {
       flex: 1;
@@ -142,13 +144,18 @@ body.portfolio-mode {
 
     blockquote {
       margin: 0;
-      font-style: italic;
+
+      &::before {
+        content: '“';
+      }
+
+      &::after {
+        content: '”';
+      }
     }
 
     figcaption {
-      margin-top: 4px;
-      color: $faint;
-      font-size: 0.85rem;
+      margin-top: 2px;
 
       &::before {
         content: '— ';
