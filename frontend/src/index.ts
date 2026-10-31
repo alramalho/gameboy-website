@@ -292,7 +292,7 @@ function createGameboy() {
   let lastTouchEnd = 0
   document.addEventListener('touchend', (event) => {
     const now = event.timeStamp
-    if (now - lastTouchEnd < 350 && !inPortfolio()) event.preventDefault()
+    if (now - lastTouchEnd < 500 && !inPortfolio()) event.preventDefault() // iOS counts taps this far apart as a double tap
     lastTouchEnd = now
   }, { passive: false })
   for (const type of ['gesturestart', 'gesturechange', 'gestureend', 'dblclick']) {

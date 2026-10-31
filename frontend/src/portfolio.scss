@@ -12,7 +12,7 @@ $rule: #3a3632;
 
 html.portfolio-mode {
   background: $paper;
-  touch-action: auto;
+  touch-action: manipulation; // scrolling, but no double-tap zoom
   -webkit-user-select: text;
   user-select: text;
   -webkit-touch-callout: default;

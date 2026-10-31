@@ -30,6 +30,14 @@ html {
   -webkit-touch-callout: none;
 }
 
+// No zooming, ever: a double tap anywhere on the console (even the bare shell between the
+// buttons) or a pinch would zoom it out of shape. iOS doesn't always honour touch-action on the
+// root alone, so every element says it. (The portfolio scrolls: see portfolio.scss.)
+body:not(.portfolio-mode),
+body:not(.portfolio-mode) * {
+  touch-action: none;
+}
+
 body {
   margin: 0;
   overflow: hidden;
