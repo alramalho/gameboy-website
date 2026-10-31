@@ -93,7 +93,42 @@ function fireControl(command: Action) {
  */
 function createPortfolio() {
   document.querySelector('.portfolio .back')?.addEventListener('click', leavePortfolio)
+  showFoundPaintings()
   if (location.hash === '#portfolio') showPortfolio(true)
+}
+
+/**
+ * The paintings on the portfolio stay blurred behind a lock until they're found in the game: the
+ * game says so when one goes in the bag, and this browser remembers.
+ */
+const FOUND_PAINTINGS = 'found-paintings'
+
+function foundPaintings(): string[] {
+  try {
+    const found = JSON.parse(localStorage.getItem(FOUND_PAINTINGS) ?? '[]')
+    return Array.isArray(found) ? found : []
+  } catch {
+    return []
+  }
+}
+
+function paintingFound(painting: unknown) {
+  if (typeof painting !== 'string' || foundPaintings().includes(painting)) return
+  try {
+    localStorage.setItem(FOUND_PAINTINGS, JSON.stringify([...foundPaintings(), painting]))
+  } catch { }
+  showFoundPaintings()
+}
+
+function showFoundPaintings() {
+  const found = foundPaintings()
+  const paintings = [...document.querySelectorAll<HTMLElement>('.portfolio [data-painting]')]
+  for (const item of paintings) {
+    const locked = !found.includes(item.dataset.painting!)
+    item.classList.toggle('locked', locked)
+    item.inert = locked
+  }
+  document.querySelector('.portfolio .paintings')?.classList.toggle('unlocked', paintings.every((item) => !item.inert))
 }
 
 function inPortfolio() {
@@ -236,6 +271,7 @@ function createGameboy() {
     // The game's sound effects play here, where the taps are (see sound.ts).
     if (event.data?.kind === 'sound') playEffect(event.data.sound as Sound)
     if (event.data?.kind === 'konami') enterPortfolio()
+    if (event.data?.kind === 'painting-found') paintingFound(event.data.painting)
     if (event.data?.kind === 'showcase-preload') preloadShowcase(event.data.module, event.data.images)
     if (event.data?.kind === 'showcase-open') openShowcase(event.data.module, event.data.options)
     if (event.data?.kind === 'showcase-press') showcase?.press(event.data.button)
