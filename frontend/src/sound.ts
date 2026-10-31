@@ -4,7 +4,7 @@
  * buttons. The game asks for a sound by name (a message { kind: 'sound', sound }), and the
  * recipes are the same as the game's own (pokemon-website/src/sound.ts): keep the two in step.
  */
-export type Sound = 'bump' | 'door' | 'blip' | 'item';
+export type Sound = 'bump' | 'door' | 'blip' | 'item' | 'warp';
 
 let context: AudioContext | undefined;
 let master: GainNode | undefined;
@@ -115,5 +115,36 @@ export const RECIPES: Record<Sound, (ac: AudioContext, out: AudioNode) => void> 
     [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => tone(ac, out, 'square', f, f, i * 0.09, 0.09, 0.14));
     tone(ac, out, 'square', 1046.5, 1046.5, 0.36, 0.4, 0.14);
     tone(ac, out, 'triangle', 261.63, 261.63, 0, 0.76, 0.3);
+  },
+  // Opening a project: a wobbling sweep and a whoosh rising while the screen spins (1.3s),
+  // then a bright chord as it opens into the site.
+  warp: (ac, out) => {
+    const t = ac.currentTime
+    for (const [wave, detune, volume] of [['triangle', 0, 0.22], ['square', 7, 0.05]] as const) {
+      const osc = ac.createOscillator()
+      const gain = ac.createGain()
+      const wobble = ac.createOscillator()
+      const depth = ac.createGain()
+      osc.type = wave
+      osc.detune.value = detune
+      osc.frequency.setValueAtTime(220, t)
+      osc.frequency.exponentialRampToValueAtTime(1320, t + 1.25)
+      wobble.frequency.setValueAtTime(5, t)
+      wobble.frequency.linearRampToValueAtTime(14, t + 1.25)
+      depth.gain.value = 18
+      wobble.connect(depth).connect(osc.frequency)
+      gain.gain.setValueAtTime(0.0001, t)
+      gain.gain.exponentialRampToValueAtTime(volume, t + 0.25)
+      gain.gain.setValueAtTime(volume, t + 1.2)
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 1.5)
+      osc.connect(gain).connect(out)
+      osc.start(t)
+      wobble.start(t)
+      osc.stop(t + 1.55)
+      wobble.stop(t + 1.55)
+    }
+    noise(ac, out, 300, 5000, 0.1, 1.2, 0.12)
+    ;[1046.5, 1318.51, 1567.98, 2093].forEach((f, i) => tone(ac, out, 'square', f, f, 1.3 + i * 0.05, 0.5, 0.11))
+    tone(ac, out, 'triangle', 523.25, 523.25, 1.3, 0.8, 0.25)
   },
 };
