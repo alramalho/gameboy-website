@@ -210,6 +210,10 @@ function createGameboy() {
   }
   document.addEventListener('keydown', (event) => {
     if (inPortfolio()) return // reading: the keys are the page's
+    if (project) { // a project is open over the page: B goes back (Escape too, see project.close)
+      if (['KeyB', 'KeyX', 'Backspace'].includes(event.code)) project.close()
+      return
+    }
     const action = KEY_ACTIONS[event.code]
     if (action || event.code == 'Space') event.preventDefault()
     if (event.repeat) return
@@ -218,7 +222,7 @@ function createGameboy() {
     if (action == 'select') showPressed(action, true)
   })
   document.addEventListener('keyup', (event) => {
-    if (inPortfolio()) return
+    if (inPortfolio() || project) return
     sendToGame({ kind: 'key', code: event.code, down: false })
     const action = KEY_ACTIONS[event.code]
     if (action == 'select') showPressed(action, false)
@@ -235,6 +239,10 @@ function createGameboy() {
     if (event.data?.kind === 'showcase-preload') preloadShowcase(event.data.module, event.data.images)
     if (event.data?.kind === 'showcase-open') openShowcase(event.data.module, event.data.options)
     if (event.data?.kind === 'showcase-press') showcase?.press(event.data.button)
+    if (event.data?.kind === 'project-open') openProject(event.data.module, event.data.options)
+    if (event.data?.kind === 'project-close') project?.close()
+    // Sites that aren't Alex's to show here: a new tab, opened here, where the key press was.
+    if (event.data?.kind === 'open-tab' && isSite(event.data.url)) window.open(event.data.url, '_blank', 'noopener')
   })
 
   // Browsers only allow sound after a tap or key press on the page, so start it with the first.
@@ -382,6 +390,47 @@ async function openShowcase(module: string, options: any) {
     })
   } catch {
     reply({ kind: 'showcase-closed', choice: 'leave' })
+  }
+}
+
+/**
+ * One of Alex's projects, opened from its desk in the game: the desk's little screen comes out of
+ * the Game Boy's screen and opens into the project's site over the whole page. Its code lives with
+ * the game too (pokemon-website, src/project/). While it's open, the keys are the page's.
+ */
+let project: { close(): void } | undefined
+
+const isSite = (url: unknown) => {
+  try {
+    return typeof url === 'string' && new URL(url).protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
+async function openProject(module: string, options: any) {
+  const origin = gameOrigin()
+  const isPicture = (url: unknown) => typeof url === 'string' && (url.startsWith('data:image/png;base64,') || fromGame(url))
+  if (project || !fromGame(module) || !isSite(options?.url) || !isPicture(options?.mini)) return
+  const screen = game.getBoundingClientRect()
+  const k = screen.width / game.clientWidth
+  const from = options.from as Rect
+  const reply = (message: object) => game.contentWindow?.postMessage(message, origin)
+  reply({ kind: 'project-ack' })
+  try {
+    const { openProject } = await showcaseModule(module)
+    project = openProject({
+      url: options.url, label: String(options.label ?? ''), date: String(options.date ?? ''),
+      note: options.note && String(options.note), mini: options.mini,
+      from: { x: screen.left + from.x * k, y: screen.top + from.y * k, width: from.width * k, height: from.height * k },
+      onClose: () => {
+        project = undefined
+        reply({ kind: 'project-closed' })
+      },
+    })
+  } catch {
+    project = undefined
+    reply({ kind: 'project-closed' })
   }
 }
 
