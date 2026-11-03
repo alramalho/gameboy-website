@@ -1,4 +1,4 @@
-import { playSound as playEffect, unlockSound, Sound } from "./sound";
+import { playSound as playEffect, playMusic, stopMusic, unlockSound, Sound } from "./sound";
 import { QUOTES } from "./quotes";
 
 /**
@@ -289,6 +289,9 @@ function createGameboy() {
     if (event.data?.kind === 'held') showPressed(event.data.button, !!event.data.down)
     // The game's sound effects play here, where the taps are (see sound.ts).
     if (event.data?.kind === 'sound') playEffect(event.data.sound as Sound)
+    // And its intro music, only ever a file from the game's own server.
+    if (event.data?.kind === 'music' && event.data.action === 'play' && fromGame(event.data.src)) playMusic(event.data.src, Number(event.data.at) || 0)
+    if (event.data?.kind === 'music' && event.data.action === 'stop') stopMusic(Number(event.data.ms) || 0)
     if (event.data?.kind === 'konami') enterPortfolio()
     if (event.data?.kind === 'painting-found') paintingFound(event.data.painting)
     if (event.data?.kind === 'showcase-preload') preloadShowcase(event.data.module, event.data.images)

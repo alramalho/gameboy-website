@@ -61,6 +61,43 @@ export function playSound(sound: Sound) {
   RECIPES[sound](context, master);
 }
 
+let music: HTMLAudioElement | undefined;
+let musicFade = 0;
+
+/**
+ * The game's intro music, played here for the same reason as the effects (pokemon-website's
+ * music.ts asks): { kind: 'music', action: 'play', src, at } plays the track from `at` seconds,
+ * { kind: 'music', action: 'stop', ms } fades it out.
+ */
+export function playMusic(src: string, at: number) {
+  cancelAnimationFrame(musicFade);
+  if (!music || music.src !== src) {
+    music?.pause();
+    music = new Audio(src);
+    music.setAttribute('playsinline', '');
+  }
+  const track = music;
+  track.volume = 1;
+  const seek = () => { track.currentTime = at; };
+  if (track.readyState >= 1) seek();
+  else track.addEventListener('loadedmetadata', seek, { once: true });
+  track.play().catch(() => {});
+}
+
+export function stopMusic(ms: number) {
+  const track = music;
+  if (!track) return;
+  cancelAnimationFrame(musicFade);
+  const from = track.volume, start = performance.now();
+  const step = () => {
+    const k = Math.min(1, (performance.now() - start) / ms);
+    track.volume = from * (1 - k);
+    if (k < 1) musicFade = requestAnimationFrame(step);
+    else track.pause();
+  };
+  step();
+}
+
 /** A note: a wave sliding from one pitch to another, with a quick attack and a decay. */
 export function tone(ac: AudioContext, out: AudioNode, wave: OscillatorType, from: number, to: number,
   start: number, length: number, volume: number) {
