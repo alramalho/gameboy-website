@@ -1,4 +1,3 @@
-import { playSound as playEffect, playMusic, stopMusic, unlockSound, Sound } from "./sound";
 import { QUOTES } from "./quotes";
 
 /**
@@ -287,11 +286,13 @@ function createGameboy() {
   window.addEventListener('message', (event) => {
     if (event.source !== game.contentWindow) return
     if (event.data?.kind === 'held') showPressed(event.data.button, !!event.data.down)
-    // The game's sound effects play here, where the taps are (see sound.ts).
-    if (event.data?.kind === 'sound') playEffect(event.data.sound as Sound)
-    // And its intro music, only ever a file from the game's own server.
-    if (event.data?.kind === 'music' && event.data.action === 'play' && fromGame(event.data.src)) playMusic(event.data.src, Number(event.data.at) || 0)
-    if (event.data?.kind === 'music' && event.data.action === 'stop') stopMusic(Number(event.data.ms) || 0)
+    // The game's sound effects and music play here, where the taps are (see gameAudio), music
+    // only ever from a file on the game's own server.
+    const data = event.data
+    if (data?.kind === 'sound-module') gameAudio(data.module)
+    if (data?.kind === 'sound') gameAudio(data.module)?.then((audio) => audio.playSound(data.sound))
+    if (data?.kind === 'music' && data.action === 'play' && fromGame(data.src)) gameAudio(data.module)?.then((audio) => audio.playMusic(data.src, Number(data.at) || 0))
+    if (data?.kind === 'music' && data.action === 'stop') gameAudio(data.module)?.then((audio) => audio.stopMusic(Number(data.ms) || 0))
     if (event.data?.kind === 'konami') enterPortfolio()
     if (event.data?.kind === 'painting-found') paintingFound(event.data.painting)
     if (event.data?.kind === 'showcase-preload') preloadShowcase(event.data.module, event.data.images)
@@ -305,7 +306,7 @@ function createGameboy() {
 
   // Browsers only allow sound after a tap or key press on the page, so start it with the first.
   for (const type of ['pointerdown', 'touchend', 'click', 'keydown']) {
-    document.addEventListener(type, unlockSound, { passive: true })
+    document.addEventListener(type, () => audio?.unlockSound(), { passive: true })
   }
 
   // iOS Safari ignores touch-action and user-scalable=no for double-tap and pinch zoom, so
@@ -402,8 +403,8 @@ const fromGame = (url: unknown) => {
   }
 }
 const modules = new Map<string, Promise<any>>()
-/** The showcase's code, loaded once from the game's site and kept. */
-function showcaseModule(url: string) {
+/** One of the game's modules (the showcase, a project's opening, its sounds), loaded once from its site and kept. */
+function gameModule(url: string) {
   if (!modules.has(url)) {
     const loading = importFromGame(url)
     loading.catch(() => modules.delete(url)) // try again next time
@@ -412,10 +413,24 @@ function showcaseModule(url: string) {
   return modules.get(url)!
 }
 
+/**
+ * The game's sound effects and music, played here rather than inside the game's iframe: on a
+ * phone only the page that was tapped may make sound, and the taps land on the Game Boy's
+ * buttons. The code is the game's own (pokemon-website's src/audio.ts), loaded from its site, so
+ * there's one copy of the recipes. Until it has loaded, taps can't start sound yet.
+ */
+let audio: any
+function gameAudio(url: unknown): Promise<any> | undefined {
+  if (!fromGame(url)) return undefined
+  const loading = gameModule(url as string)
+  loading.then((module) => { audio = module }, () => {})
+  return loading
+}
+
 /** The game has paintings near: get the code and their pictures ready, so it opens at once. */
 function preloadShowcase(module: unknown, images: unknown) {
   if (!fromGame(module) || !Array.isArray(images)) return
-  showcaseModule(module as string)
+  gameModule(module as string)
     .then((showcase) => showcase.preloadShowcase?.(images.filter(fromGame)))
     .catch(() => { })
 }
@@ -430,7 +445,7 @@ async function openShowcase(module: string, options: any) {
   const reply = (message: object) => game.contentWindow?.postMessage(message, origin)
   reply({ kind: 'showcase-ack' }) // so the game knows this page shows it (and doesn't itself)
   try {
-    const { openShowcase } = await showcaseModule(module)
+    const { openShowcase } = await gameModule(module)
     showcase = openShowcase({
       image: options.image, mini: options.mini, title: String(options.title ?? ''),
       caption: options.caption && String(options.caption), collectable: options.collectable,
@@ -476,7 +491,7 @@ async function openProject(module: string, options: any) {
   const reply = (message: object) => game.contentWindow?.postMessage(message, origin)
   reply({ kind: 'project-ack' })
   try {
-    const { openProject } = await showcaseModule(module)
+    const { openProject } = await gameModule(module)
     project = openProject({
       url: options.url, label: String(options.label ?? ''), date: String(options.date ?? ''),
       note: options.note && String(options.note), mini: options.mini,
