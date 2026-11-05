@@ -293,6 +293,12 @@ function createGameboy() {
     if (data?.kind === 'sound') gameAudio(data.module)?.then((audio) => audio.playSound(data.sound))
     if (data?.kind === 'music' && data.action === 'play' && fromGame(data.src)) gameAudio(data.module)?.then((audio) => audio.playMusic(data.src, Number(data.at) || 0))
     if (data?.kind === 'music' && data.action === 'stop') gameAudio(data.module)?.then((audio) => audio.stopMusic(Number(data.ms) || 0))
+    // And its intro video, over the game's screen: here, a tap on the Game Boy's buttons is what
+    // lets a phone play it. It sends back what the video is doing, every frame.
+    if (data?.kind === 'video' && (data.method !== 'load' || fromGame(data.args?.[0]))) {
+      gameAudio(data.module)?.then((audio) => audio.videoCommand(data, () => game.getBoundingClientRect(),
+        (state: unknown) => game.contentWindow?.postMessage({ kind: 'video-state', state }, gameOrigin())))
+    }
     if (event.data?.kind === 'konami') enterPortfolio()
     if (event.data?.kind === 'painting-found') paintingFound(event.data.painting)
     if (event.data?.kind === 'showcase-preload') preloadShowcase(event.data.module, event.data.images)
